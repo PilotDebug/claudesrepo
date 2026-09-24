@@ -4,6 +4,8 @@ A multi-language playground for trying ideas quickly, built to work with
 [Claude Code on the web](https://claude.ai/code), and published as a gallery website
 where every experiment shows its live demo, program output, test results, and source.
 
+**Live site:** https://celadon-meerkat-0da244.netlify.app/
+
 ```
 labs/
   python/hello/   # unittest
