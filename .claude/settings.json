@@ -17,7 +17,10 @@
       "Bash(scripts/lab.sh:*)",
       "Bash(scripts/test-all.sh:*)",
       "Bash(scripts/new.sh:*)",
-      "Bash(node site/build.mjs)"
+      "Bash(scripts/new-project.sh:*)",
+      "Bash(scripts/graduate.sh:*)",
+      "Bash(node site/build.mjs)",
+      "Bash(node --test:*)"
     ]
   }
 }

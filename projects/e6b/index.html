@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E6B Flight Computer</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <h1>E6B</h1>
+    <p>Crosswind, density altitude, and wind correction — worked as you type.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="xw-title">
+      <h2 id="xw-title">Crosswind</h2>
+      <div class="xw">
+        <form class="fields" data-calc="xw">
+          <label>Runway <input name="rwy" value="27" inputmode="numeric" autocomplete="off"></label>
+          <label>Wind from ° <input name="wdir" type="number" value="300" min="0" max="360"></label>
+          <label>Wind kt <input name="wspd" type="number" value="20" min="0" max="150"></label>
+          <label>Gust kt <input name="gust" type="number" value="" min="0" max="150" placeholder="—"></label>
+        </form>
+        <svg id="xw-diagram" viewBox="0 0 240 240" role="img" aria-label="Runway and wind diagram"></svg>
+      </div>
+      <dl class="readout" id="xw-out"></dl>
+    </section>
+
+    <section class="card" aria-labelledby="da-title">
+      <h2 id="da-title">Density altitude</h2>
+      <form class="fields" data-calc="da">
+        <label>Field elevation ft <input name="elev" type="number" value="5000"></label>
+        <label>Altimeter inHg <input name="alt" type="number" value="29.92" step="0.01"></label>
+        <label>OAT °C <input name="oat" type="number" value="30"></label>
+      </form>
+      <dl class="readout" id="da-out"></dl>
+      <div class="meter" id="da-meter" aria-hidden="true"><span></span></div>
+    </section>
+
+    <section class="card" aria-labelledby="wt-title">
+      <h2 id="wt-title">Wind correction</h2>
+      <form class="fields" data-calc="wt">
+        <label>True course ° <input name="tc" type="number" value="090" min="0" max="360"></label>
+        <label>TAS kt <input name="tas" type="number" value="100" min="1"></label>
+        <label>Wind from ° <input name="wdir" type="number" value="360" min="0" max="360"></label>
+        <label>Wind kt <input name="wspd" type="number" value="20" min="0"></label>
+        <label>Distance nm <input name="dist" type="number" value="120" min="0"></label>
+      </form>
+      <dl class="readout" id="wt-out"></dl>
+    </section>
+  </main>
+
+  <footer>Rules-of-thumb maths for learning and quick checks — not for flight planning.
+    Always use your POH and official weather.</footer>
+</body>
+</html>

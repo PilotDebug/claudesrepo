@@ -1,8 +1,10 @@
-// Builds the sandbox website into site/dist.
+// Builds the sandbox website ("Hangar") into site/dist.
 //
-// Scans labs/<lang>/<name>/, runs each lab's tests and program (via
-// scripts/lab.sh), collects its README and source files, copies any live
-// demo, and writes everything the front end needs into manifest.json.
+// - projects/<slug>/  web prototypes: copied to dist/p/<slug>/ so each has its own
+//                     URL, tested, and given a history from git log.
+// - labs/<lang>/<n>/  language experiments: tests and program run via scripts/lab.sh.
+// - IDEAS.md          the idea backlog.
+// Everything the front end needs goes into manifest.json.
 //
 // Environment:
 //   SANDBOX_SKIP_EXEC=1   don't run tests or programs (fast preview builds)
@@ -15,6 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const labsDir = path.join(root, "labs");
+const projectsDir = path.join(root, "projects");
 const srcDir = path.join(root, "site", "src");
 const distDir = path.join(root, "site", "dist");
 
@@ -133,28 +136,96 @@ function buildLab(lang, name) {
   };
 }
 
+const STAGES = ["idea", "prototype", "active", "graduated", "shelved"];
+
+function readJSON(file, fallback) {
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch (err) {
+    if (fs.existsSync(file)) console.warn(`  ! ${path.relative(root, file)}: ${err.message}`);
+    return fallback;
+  }
+}
+
+function history(rel, limit = 40) {
+  return git("log", `-n${limit}`, "--format=%h%x1f%cI%x1f%s", "--", rel)
+    .split("\n").filter(Boolean)
+    .map((line) => { const [hash, date, subject] = line.split("\x1f"); return { hash, date, subject }; });
+}
+
+function buildProject(slug) {
+  const dir = path.join(projectsDir, slug);
+  const rel = path.relative(root, dir);
+  const meta = readJSON(path.join(dir, "project.json"), {});
+  const readmePath = path.join(dir, "README.md");
+  const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, "utf8") : "";
+  const fromReadme = parseReadme(readme);
+  const entry = meta.entry || "index.html";
+
+  copyDir(dir, path.join(distDir, "p", slug));
+  const files = listFiles(dir)
+    .filter((f) => f !== "README.md" && f !== "project.json" && f !== "package.json")
+    .sort((a, b) => fileRank(a) - fileRank(b) || a.localeCompare(b))
+    .map((f) => readSource(dir, f));
+
+  process.stdout.write(`  ${rel.padEnd(28)}`);
+  const test = exec("test", rel);
+  console.log(`test: ${test.status}`);
+
+  const log = history(rel);
+  return {
+    slug, path: rel,
+    title: meta.title || fromReadme.title || slug,
+    tagline: meta.tagline || fromReadme.description,
+    stage: STAGES.includes(meta.stage) ? meta.stage : "prototype",
+    tags: Array.isArray(meta.tags) ? meta.tags : [],
+    created: meta.created || log.at(-1)?.date?.slice(0, 10) || null,
+    updated: log[0]?.date || null,
+    links: meta.links || {},
+    next: Array.isArray(meta.next) ? meta.next : [],
+    url: fs.existsSync(path.join(dir, entry)) ? `p/${slug}/${entry}` : null,
+    readme, files, test, history: log,
+  };
+}
+
+// IDEAS.md: each "## " heading is an idea; its paragraph is the pitch; "Tags:" groups it.
+function parseIdeas() {
+  const file = path.join(root, "IDEAS.md");
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, "utf8").split(/^## /m).slice(1).map((chunk) => {
+    const [heading, ...rest] = chunk.split("\n");
+    const tagLine = rest.find((l) => /^tags:/i.test(l.trim()));
+    const pitch = rest.filter((l) => l !== tagLine).join("\n").trim().replace(/\s*\n\s*/g, " ");
+    const tags = tagLine ? tagLine.replace(/^\s*tags:/i, "").split(",").map((t) => t.trim()).filter(Boolean) : [];
+    return { title: heading.trim(), pitch, tags };
+  });
+}
+
+const subdirs = (dir) => fs.existsSync(dir)
+  ? fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()
+  : [];
+
 function main() {
   fs.rmSync(distDir, { recursive: true, force: true });
   copyDir(srcDir, distDir);
 
+  console.log("Building projects:");
+  const projects = subdirs(projectsDir).map(buildProject);
   console.log("Building labs:");
-  const labs = fs.readdirSync(labsDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .flatMap((l) => fs.readdirSync(path.join(labsDir, l.name), { withFileTypes: true })
-      .filter((e) => e.isDirectory())
-      .map((e) => buildLab(l.name, e.name)));
+  const labs = subdirs(labsDir).flatMap((lang) => subdirs(path.join(labsDir, lang)).map((n) => buildLab(lang, n)));
+  const ideas = parseIdeas();
 
   const manifest = {
     generatedAt: new Date().toISOString(),
     commit: (process.env.COMMIT_REF || git("rev-parse", "HEAD")).slice(0, 7) || null,
     branch: process.env.BRANCH || git("rev-parse", "--abbrev-ref", "HEAD") || null,
     repo: process.env.REPOSITORY_URL || "https://github.com/PilotDebug/claudesrepo",
-    labs,
+    projects, ideas, labs,
   };
   fs.writeFileSync(path.join(distDir, "manifest.json"), JSON.stringify(manifest));
 
-  const failed = labs.filter((l) => l.test.status === "failed").length;
-  console.log(`\nWrote ${path.relative(root, distDir)}/ — ${labs.length} labs, ${failed} with failing tests.`);
+  const failed = [...projects, ...labs].filter((x) => x.test.status === "failed").length;
+  console.log(`\nWrote ${path.relative(root, distDir)}/ — ${projects.length} projects, ${labs.length} labs, ` +
+    `${ideas.length} ideas; ${failed} with failing tests.`);
 }
 
 main();

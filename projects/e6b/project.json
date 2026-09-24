@@ -1,0 +1,12 @@
+{
+  "title": "E6B Flight Computer",
+  "tagline": "Crosswind, density altitude and wind correction with a live runway diagram.",
+  "stage": "prototype",
+  "tags": ["aviation", "calculator"],
+  "created": "2026-09-24",
+  "next": [
+    "Add fuel planning: burn rate × time enroute + reserve",
+    "Pull live METAR for an airport code and prefill wind/altimeter/OAT",
+    "Add a crosswind limit setting that turns the readout red when exceeded"
+  ]
+}

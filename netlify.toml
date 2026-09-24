@@ -1,8 +1,9 @@
-# Netlify builds the sandbox gallery from labs/ on every push.
-# The build runs each lab's tests and program so the site can show their output;
-# labs whose toolchain isn't in Netlify's image show as "not run".
+# Netlify builds the Hangar site on every push to main (and on deploy previews for PRs).
+# The build runs each lab's program and every project's and lab's tests so the site can
+# show results. Rust isn't set up in Netlify's image by default, so install the stable
+# toolchain first; if that fails, Rust labs show as "no tests run" instead of failing.
 [build]
-  command = "node site/build.mjs"
+  command = "(rustup show active-toolchain || rustup default stable --profile minimal) >/dev/null 2>&1; node site/build.mjs"
   publish = "site/dist"
 
 [build.environment]
