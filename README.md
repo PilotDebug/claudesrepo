@@ -1,53 +1,56 @@
-# claudesrepo — the sandbox
+# Hangar — a prototype sandbox
 
-A multi-language playground for trying ideas quickly, built to work with
-[Claude Code on the web](https://claude.ai/code), and published as a gallery website
-where every experiment shows its live demo, program output, test results, and source.
+Where project ideas get built, in conversation with [Claude Code](https://claude.ai/code),
+into working prototypes you can preview, tweak, and eventually graduate into their own
+deployments.
 
 **Live site:** https://celadon-meerkat-0da244.netlify.app/
 
+## The loop
+
 ```
-labs/
-  python/hello/   # unittest
-  node/hello/     # node --test
-  go/hello/       # go test
-  rust/hello/     # cargo test
-  cpp/hello/      # make + g++, assert-style tests
-  web/hello/      # a live page in the gallery; logic tested with node --test
-site/             # gallery website generator (build.mjs) and front end (src/)
-scripts/          # lab runner, test runner, lab scaffolder
-scratch/          # gitignored throwaway space
+ IDEAS.md ──/prototype──▶ projects/<slug>/ ──PR──▶ develop ──/ship──▶ main ──▶ Netlify
+ (runway)                   │    ▲                (preview)                   (live)
+                            └────┘ /tweak <slug> <change>
+                            └──────/graduate──▶ its own repo + site
 ```
 
-## Quick start
+1. **Idea** — park it with `/idea …`, or add it to `IDEAS.md`. The site's Runway page gives
+   every idea a one-click "build this" prompt.
+2. **Prototype** — `/prototype METAR decoder — paste a METAR, get plain English`. Claude
+   scaffolds `projects/<slug>/`, builds it with tests, checks it in a browser, and opens a PR.
+3. **Tweak** — open the project in Hangar, type what should change in **Tweak with Claude**,
+   and paste the generated `/tweak` prompt into a session. Planned next steps are one click.
+4. **Ship** — `/ship` merges into `develop`, then `main`, and Netlify publishes.
+5. **Graduate** — `/graduate <slug>` exports it as its own repo and Netlify site.
+
+## What's in the hangar
+
+| Project | What it does |
+|---|---|
+| [E6B Flight Computer](projects/e6b) | Crosswind (with runway diagram), density altitude, wind correction |
+| [Kit Build Log](projects/build-log) | Shop hours by assembly and week, CSV export/import |
+
+Plus `labs/` — small experiments in Python, Node, Go, Rust, C++, and web — each shown with
+its program output and test results.
+
+## Commands
 
 ```sh
-make new LANG=cpp NAME=ray-tracer     # copy the C++ template to labs/cpp/ray-tracer
-make test LAB=labs/cpp/ray-tracer     # test just that lab
-make test                             # test everything
-make serve                            # build the gallery and open http://localhost:8000
+make project NAME=metar TITLE="METAR Decoder"   # scaffold a prototype
+make test                                       # all project + lab tests
+make serve                                      # build the site → http://localhost:8000
+make graduate NAME=e6b                          # export as a standalone repo folder
+make help                                       # everything else
 ```
 
-## Branches
+## Branches and deploys
 
-| Branch      | Purpose                                              |
-|-------------|------------------------------------------------------|
-| `main`      | Production — Netlify deploys this to the live site   |
-| `develop`   | Integration — feature branches merge here first      |
-| `claude/*`  | Work branches from Claude Code sessions → PR to `develop` |
+| Branch | Purpose |
+|---|---|
+| `main` | Production: Netlify deploys it to the live site |
+| `develop` | Integration: PRs land here first |
+| `claude/*` | Claude Code session branches, which open PRs into `develop` |
 
-CI runs `make test` and `make site` on pushes to `main`/`develop` and on every pull request.
-
-## Deploying to Netlify
-
-1. In Netlify: **Add new site → Import an existing project → GitHub → `PilotDebug/claudesrepo`**.
-2. Set **Branch to deploy** to `main`. Build settings are read from `netlify.toml`
-   (`node site/build.mjs`, publish `site/dist`), so leave those fields as detected.
-3. Deploy. Optional: enable **branch deploys** for `develop` to get a staging URL, and
-   **deploy previews** so every pull request gets its own preview link.
-
-## Ideas for things to ask Claude
-
-- "Make a web lab that visualises sorting algorithms step by step."
-- "Write a C++ lab that benchmarks `std::vector` vs `std::list` insertion."
-- "Build a Go lab that simulates Conway's Game of Life, with a `demo/` page that animates it."
+CI runs every test and builds the site on each PR and on pushes to `main`/`develop`.
+Turn on Netlify **deploy previews** to get a preview URL on every PR.
