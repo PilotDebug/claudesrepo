@@ -1,0 +1,18 @@
+# Throwaway work — never committed
+scratch/*
+!scratch/.gitkeep
+
+# Build output
+target/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+
+# Local-only settings and secrets
+.claude/settings.local.json
+.env
+.env.*
+.DS_Store
