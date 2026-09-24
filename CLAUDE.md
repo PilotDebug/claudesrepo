@@ -1,50 +1,70 @@
-# Sandbox repo
+# Hangar — prototype sandbox
 
-A playground for quick experiments in several languages, published as a browsable gallery
-website (Netlify). Nothing here is production code; favour small, self-contained, runnable
-experiments over shared infrastructure.
+The owner comes here with project ideas and builds them in conversation with Claude. Each
+prototype is a small static web app in `projects/`, previewed on the Hangar site (Netlify),
+tweaked through more conversations, and eventually "graduated" into its own repo and
+deployment. Speed and a working, good-looking result matter more than architecture.
+
+Likely home turf (inferred from the owner's tools; correct this if wrong): aviation,
+building a Bearhawk kit aircraft, and markets/finance. Any idea is fair game.
+
+## Skills (slash commands)
+
+- `/prototype <name> — <what it does>` — new project from an idea, through to a PR.
+- `/tweak <slug> <change>` — change an existing project.
+- `/ship` — merge PRs into `develop`, then promote `develop` → `main` (deploys the site).
+- `/graduate <slug>` — export a project to its own repo + Netlify site.
+- `/idea <idea>` — park an idea in `IDEAS.md` (the "runway").
 
 ## Layout
 
-- `labs/<lang>/<name>/` — one experiment per directory. Languages: `python`, `node`, `go`,
-  `rust`, `cpp`, `web`. `labs/<lang>/hello/` is the template each new lab is copied from — keep
-  it minimal.
-- `scripts/lab.sh <run|test> <lab>` — the **only** place that knows each language's run/test
-  commands. `test-all.sh` and the site build both call it.
-- `site/` — the gallery website. `build.mjs` (Node stdlib only) scans `labs/`, runs each lab's
-  tests and program, and writes `site/dist/` (gitignored). `site/src/` is the static front end.
-- `scratch/` — gitignored. Put throwaway files here; they are never committed.
+- `projects/<slug>/` — web prototypes. `project.json` holds `title`, `tagline`, `stage`
+  (`prototype` → `active` → `graduated`, or `shelved`), `tags`, `created`, `links`
+  (`live`, `repo`), and `next` (follow-ups shown as one-click tweak prompts). Served at
+  `/p/<slug>/`. Created from `templates/project/`.
+- `IDEAS.md` — idea backlog; each `## ` heading is an idea with a pitch and `Tags:` line.
+- `labs/<lang>/<name>/` — small language experiments (`python`, `node`, `go`, `rust`,
+  `cpp`, `web`); `labs/<lang>/hello/` is each language's template.
+- `scripts/lab.sh <run|test> <dir>` — the **only** place that knows how to run and test
+  each kind of directory. `test-all.sh` and the site build both call it.
+- `site/` — the Hangar site. `build.mjs` (Node stdlib only) scans everything, runs tests,
+  collects git history, and writes `site/dist/` (gitignored). `site/src/` is the front end.
+- `scratch/` — gitignored throwaway space (graduation exports land in `scratch/graduated/`).
 
 ## Commands
 
-- `make test` — run every lab's tests. `make test LAB=labs/go/foo` for one lab.
-- `make new LANG=python NAME=foo` — create `labs/python/foo` from the template.
-- `make site` / `make serve` — build the gallery / build and serve it on :8000.
-- `make clean` — remove build output, `site/dist/`, and `scratch/` contents.
+- `make test` — every project's and lab's tests; `make test LAB=projects/e6b` for one.
+- `make project NAME=slug [TITLE="Name"]` — scaffold a prototype.
+- `make new LANG=go NAME=foo` — scaffold a language lab.
+- `make graduate NAME=slug` — export a project as a standalone repo folder.
+- `make site` / `make serve` — build the site / build and serve it on :8000.
 
-## How a lab appears on the site
+## Project conventions
 
-- **Title and summary** come from the lab's `README.md`: the `# ` heading and the first paragraph.
-  Always replace the scaffolded `TODO` sentence.
-- **Output tab** shows what `scripts/lab.sh run` printed at build time. Entry points:
-  `main.py`, `main.js`, `go run .`, `cargo run`, `make run` (C++).
-- **Tests tab** shows `scripts/lab.sh test` output; the status badge comes from its exit code.
-- **Demo tab** embeds a live page: a `web` lab's `index.html`, or `demo/index.html` in any other
-  lab (e.g. a visualisation of a Go lab's results). Demos are plain static files — no bundler.
+- Static files only: no bundler, no build step, no `node_modules`. CDN libraries only from
+  cdnjs or jsdelivr, and only when they clearly earn their place.
+- Logic in pure ES modules (no DOM), tested with `node --test` (`*.test.js`). The project's
+  `package.json` just sets `"type": "module"`.
+- Light and dark mode via `prefers-color-scheme`; works at 390px with no horizontal scroll.
+- `localStorage` for user data, always inside try/catch; offer CSV/JSON export when the
+  data matters to the user.
+- Never commit API keys or secrets. Keyed APIs → sample data plus a README note.
+- Aviation tools compute from standard rules of thumb, and must say plainly that they're
+  not for flight planning. Never invent aircraft-specific numbers (weights, arms, limits):
+  use obvious placeholders the owner replaces.
+- Before a PR: tests pass, and you've looked at Playwright screenshots of the page at
+  desktop and phone widths in both colour schemes.
 
-## Conventions
+## Labs conventions
 
-- Every lab must have at least one test, and `make test` must pass before committing.
-- No external dependencies unless the experiment is *about* that dependency. Stdlib test
-  runners only: `unittest`, `node --test`, `go test`, `cargo test`, and plain assert-style
-  `test_*.cpp` for C++. Web labs keep logic in ES modules so `node --test` can cover it.
-- Programs run during the Netlify build: keep them fast (well under 60s), deterministic,
-  and free of network access or interactive input.
-- If a lab needs dependencies, keep them inside the lab and explain them in its README.
-- To support a new language: add `labs/<lang>/hello/`, cases in `scripts/lab.sh`, a toolchain
-  step in `.github/workflows/ci.yml`, and a name/colour in `site/src/app.js` + `style.css`.
+- Every lab has at least one test, using stdlib runners only: `unittest`, `node --test`,
+  `go test`, `cargo test`, and assert-style `test_*.cpp` for C++.
+- Programs run during the Netlify build: fast, deterministic, no network, no input.
+- New language: add `labs/<lang>/hello/`, cases in `scripts/lab.sh`, a toolchain step in
+  `.github/workflows/ci.yml`, and a name and colour in `site/src/app.js` + `style.css`.
 
 ## Branches
 
-- `main` — what Netlify deploys. Only updated by merging `develop`.
-- `develop` — integration branch. Feature branches open pull requests into `develop`.
+- `main` — what Netlify deploys to the live site. Only updated by merging `develop`.
+- `develop` — integration. Session branches open PRs into `develop`; Netlify deploy
+  previews show each PR's version of the site.

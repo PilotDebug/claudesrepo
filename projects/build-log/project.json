@@ -1,0 +1,12 @@
+{
+  "title": "Kit Build Log",
+  "tagline": "Track shop hours by assembly and week for a homebuilt aircraft kit.",
+  "stage": "prototype",
+  "tags": ["aviation", "tracker", "bearhawk"],
+  "created": "2026-09-24",
+  "next": [
+    "Sync sessions to a shared store so phone and laptop see the same log",
+    "Attach photos to a session for the builder's log",
+    "Per-assembly progress estimates against typical build hours"
+  ]
+}

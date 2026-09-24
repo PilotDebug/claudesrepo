@@ -1,13 +1,19 @@
-.PHONY: help test new site serve clean
+.PHONY: help test new project graduate site serve clean
 
 help: ## Show this help
-	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-6s %s\n", $$1, $$2}'
+	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-9s %s\n", $$1, $$2}'
 
-test: ## Run all lab tests (or one: make test LAB=labs/go/hello)
+test: ## Run all lab + project tests (or one: make test LAB=projects/e6b)
 	@scripts/test-all.sh $(LAB)
 
-new: ## Scaffold a lab: make new LANG=python NAME=myidea
+new: ## Scaffold a language lab: make new LANG=python NAME=myidea
 	@scripts/new.sh $(LANG) $(NAME)
+
+project: ## Scaffold a web prototype: make project NAME=slug [TITLE="Nice Name"]
+	@scripts/new-project.sh $(NAME) "$(TITLE)"
+
+graduate: ## Export a project as its own deployable repo: make graduate NAME=slug
+	@scripts/graduate.sh $(NAME)
 
 site: ## Build the gallery website into site/dist
 	@node site/build.mjs

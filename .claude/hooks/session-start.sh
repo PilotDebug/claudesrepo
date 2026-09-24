@@ -7,4 +7,5 @@ for cmd in "python3 --version" "node --version" "go version" "cargo --version" "
   bin=${cmd%% *}
   if command -v "$bin" >/dev/null; then echo "  $($cmd 2>&1 | head -1)"; else echo "  $bin: not installed"; fi
 done
-echo "Labs: $(find labs -mindepth 2 -maxdepth 2 -type d 2>/dev/null | wc -l) (run 'make test' to check them all)"
+echo "Projects: $(find projects -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)  Labs: $(find labs -mindepth 2 -maxdepth 2 -type d 2>/dev/null | wc -l)  Ideas: $(grep -c '^## ' IDEAS.md 2>/dev/null || echo 0)"
+echo "Skills: /prototype /tweak /ship /graduate /idea — see CLAUDE.md"
