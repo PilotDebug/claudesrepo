@@ -1,6 +1,6 @@
 import unittest
 
-from hello import greet
+from main import greet
 
 
 class GreetTest(unittest.TestCase):

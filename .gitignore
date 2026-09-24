@@ -3,6 +3,7 @@ scratch/*
 !scratch/.gitkeep
 
 # Build output
+site/dist/
 target/
 node_modules/
 __pycache__/

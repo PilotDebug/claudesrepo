@@ -3,7 +3,7 @@
 # so Claude knows what it can run without having to probe.
 cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}" || exit 0
 echo "Sandbox toolchains:"
-for cmd in "python3 --version" "node --version" "go version" "cargo --version"; do
+for cmd in "python3 --version" "node --version" "go version" "cargo --version" "g++ --version"; do
   bin=${cmd%% *}
   if command -v "$bin" >/dev/null; then echo "  $($cmd 2>&1 | head -1)"; else echo "  $bin: not installed"; fi
 done

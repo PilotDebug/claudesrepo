@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:
@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }  # full history so the site can show "updated" dates
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - uses: actions/setup-node@v4
@@ -17,4 +18,6 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version: "1.24" }
       - uses: dtolnay/rust-toolchain@stable
+      # g++ and make come preinstalled on ubuntu-latest.
       - run: make test
+      - run: make site

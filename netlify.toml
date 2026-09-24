@@ -1,0 +1,15 @@
+# Netlify builds the sandbox gallery from labs/ on every push.
+# The build runs each lab's tests and program so the site can show their output;
+# labs whose toolchain isn't in Netlify's image show as "not run".
+[build]
+  command = "node site/build.mjs"
+  publish = "site/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  GO_VERSION = "1.24"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"
