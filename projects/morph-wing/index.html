@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Morph Wing</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Morph Wing</h1>
+    <p>One wing can't be best at everything. Step through the flight and watch four ways of changing shape per phase,
+      then see what each one buys and costs.</p>
+    <p class="warn">Rules of thumb on a placeholder airplane, for comparing ideas. Not for flight planning, and not
+      your airplane's numbers: put your own in.</p>
+  </header>
+
+  <main>
+    <div class="phasebar card" role="group" aria-label="Flight phase">
+      <div id="phases" class="phases"></div>
+      <button id="play" type="button" class="ghost" aria-pressed="false" aria-label="Fly the sequence">▶<span class="lbl"> Fly the sequence</span></button>
+    </div>
+
+    <section id="concepts" class="concepts" aria-label="Wing concepts"></section>
+
+    <section class="card compare" aria-labelledby="t-title">
+      <h2 id="t-title">Head to head</h2>
+      <div class="table-wrap"><table id="table" class="table"></table></div>
+      <p class="note">Changes are against the fixed wing. Added weight goes on top of the gross weight, so payload is
+        unchanged. The ceiling uses whichever in-flight shape climbs better.</p>
+    </section>
+
+    <section class="card chart-card" aria-labelledby="p-title">
+      <div class="head">
+        <h2 id="p-title">Cruise: power needed vs airspeed</h2>
+        <span class="muted small" id="chart-alt"></span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 640 330" role="img" aria-label="Power required against airspeed for each concept's cruise shape, with engine power available"></svg>
+        <div id="tip" class="tip" hidden></div>
+      </div>
+      <p class="note">Where a curve crosses the power-available line is that shape's top speed. Low and left is induced
+        drag (lift costs more at low speed and short span); high and right is parasite drag (every square foot of wing
+        and strut you drag along).</p>
+    </section>
+
+    <aside class="side">
+      <section class="card" aria-labelledby="a-title">
+        <div class="head">
+          <h2 id="a-title">Your airplane</h2>
+          <button id="reset" type="button" class="ghost small">Reset</button>
+        </div>
+        <form id="plane" class="grid2" onsubmit="return false"></form>
+        <p class="note">Defaults are round placeholders, not any real type. Use your POH or kit numbers.</p>
+      </section>
+      <section class="card" aria-labelledby="k-title">
+        <h2 id="k-title">Concept knobs</h2>
+        <form id="knobs" onsubmit="return false"></form>
+      </section>
+    </aside>
+
+    <section class="card ideas" aria-labelledby="i-title">
+      <h2 id="i-title">More shape-changing ideas</h2>
+      <ul id="ideas" class="idea-list"></ul>
+    </section>
+  </main>
+</body>
+</html>
