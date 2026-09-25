@@ -1,0 +1,13 @@
+{
+  "title": "Morph Wing",
+  "tagline": "Step through takeoff, climb, cruise and landing and compare four shape-changing wings: STOL slats, variable area, and VTOL lift + cruise.",
+  "stage": "prototype",
+  "tags": ["aviation", "aero", "morphing", "calculator"],
+  "created": "2026-09-25",
+  "next": [
+    "Add a 'Bearhawk preset' button that loads my own weight, wing, power and CLmax numbers (I'll supply them)",
+    "Add a blown-wing concept: distributed electric props along the leading edge that raise CLmax with power",
+    "Add a tilt-rotor VTOL concept next to lift + cruise, so the two can be compared",
+    "Add a mission bar: pick a trip (runway length, distance, altitude) and rank the concepts by time and fuel"
+  ]
+}
