@@ -41,6 +41,9 @@ previewed live, and graduated into their own deployments when they're ready.
 |---|---|
 | [E6B Flight Computer](projects/e6b) | Crosswind (with runway diagram), density altitude, wind correction |
 | [Kit Build Log](projects/build-log) | Shop hours by assembly and week, CSV export/import |
+| [Part Studio](projects/part-studio) | Parametric flat parts (plate, bent bracket, panel), manufacturability checks, DXF/SVG export |
+| [Airfoil Lab](projects/airfoil-lab) | NACA sections, thin-airfoil lift curves, design for a target Cl, Reynolds number |
+| [FC Voter](projects/fc-voter) | Fault injection on three flight controllers: median voting vs master/slave |
 
 Plus `labs/` — small experiments in Python, Node, Go, Rust, C++, and web — each shown with
 its program output and test results.

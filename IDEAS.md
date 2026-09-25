@@ -21,11 +21,12 @@ welding) so anyone can go from an idea to a physical thing. You describe it and 
 parametric design; the system checks it can be made, then sends it to your own machine or
 a fab service. The hard, unsolved step for most people is idea → manufacturable design.
 
-Status: raw
+Status: building
 Category: Making
 Prior art: Bambu Lab (easy printers with an app ecosystem), Glowforge (laser cutter with beginner-friendly cloud software), desktop CNCs like Carvera, and online fabs such as SendCutSend and Xometry that make parts from finished files.
 Angle: Nobody owns the "describe it → parametric model → made" loop. Parametric CAD is code, so Claude can write it.
 First slice: Part Studio — parametric flat parts (plates, brackets, instrument-panel cutouts) with a live 2D preview and DXF export for laser/CNC services.
+Project: part-studio
 Tags: manufacturing, 3d-printing, cnc, ai
 
 ## ChoreBot
@@ -614,10 +615,11 @@ Tags: business, software
 A carrier board that links two or three Pixhawk-class flight controllers so they
 cross-check each other (voting, master/slave failover).
 
-Status: shaped
+Status: building
 Category: Aviation & drones
 Prior art: The Cube and Pixhawk have redundant IMUs inside one controller; commercial multi-redundant autopilots exist; open-source multi-FC failover is niche.
 First slice: Voting and failover simulator — three FCs report attitude; inject faults and see which one is trusted and when.
+Project: fc-voter
 Tags: drones, redundancy, pixhawk
 
 ## Experimental aircraft test flight
@@ -715,10 +717,11 @@ Tags: aviation, morphing
 Choose the characteristics you want (lift, drag, stall behaviour) and search for airfoil
 shapes that deliver them.
 
-Status: shaped
+Status: building
 Category: Aviation & drones
 Prior art: XFOIL and airfoiltools.com.
 First slice: Airfoil explorer — NACA 4-digit generator with thin-airfoil lift estimates, compare shapes side by side.
+Project: airfoil-lab
 Tags: aviation, aero
 
 ## Pair or triplet of surveillance drones auto land recharge takeoff

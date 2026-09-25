@@ -1,0 +1,12 @@
+{
+  "title": "Airfoil Lab",
+  "tagline": "Compare NACA sections, see lift curves from thin-airfoil theory, and design for a target Cl.",
+  "stage": "prototype",
+  "tags": ["aviation", "aero", "calculator"],
+  "created": "2026-09-25",
+  "next": [
+    "Import real section polars (e.g. from airfoiltools.com CSV) and overlay them on the theory line",
+    "Add a vortex-panel method so thickness affects the pressure distribution",
+    "Export the section as a DXF rib template via Part Studio"
+  ]
+}
