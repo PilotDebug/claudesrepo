@@ -1,0 +1,13 @@
+{
+  "title": "Ferry Flight",
+  "tagline": "Photograph your paper logbook, check it against its own page totals, and download a ForeFlight import file.",
+  "stage": "prototype",
+  "tags": ["aviation", "logbook", "ai", "ocr"],
+  "created": "2026-09-25",
+  "next": [
+    "Show the page photo beside the review table, with the row being edited highlighted",
+    "Carry 'amount forwarded' and 'total to date' lines through and check them page to page",
+    "Detect endorsements and ground-instruction entries and route them to ForeFlight's custom fields",
+    "Add a Netlify function so pilots can use it without their own API key"
+  ]
+}
