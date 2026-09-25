@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ferry Flight — paper logbook to ForeFlight</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Ferry Flight</h1>
+    <p>Photograph your paper logbook. Get a file ForeFlight imports. Review only the rows that don't add up.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="s1">
+      <h2 id="s1"><span class="step">1</span> Your logbook</h2>
+      <form id="settings" class="fields">
+        <label>Logbook
+          <select name="style">
+            <option value="jeppesen">Jeppesen Pilot Logbook</option>
+            <option value="asa">ASA Standard / SP-30</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label>Year of first entry <input name="year" inputmode="numeric" placeholder="e.g. 2019" maxlength="4" autocomplete="off"></label>
+        <label>Reader
+          <select name="model"></select>
+        </label>
+        <label class="wide">Anthropic API key
+          <input name="key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="check wide"><input name="remember" type="checkbox"> Remember the key on this device</label>
+      </form>
+      <p class="hint">Your photos and key go straight from this browser to Anthropic's API — nothing passes through this site.
+        Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>, or try the sample pages without one.</p>
+    </section>
+
+    <section class="card" aria-labelledby="s2">
+      <h2 id="s2"><span class="step">2</span> Pages</h2>
+      <label class="drop" id="drop">
+        <input id="files" type="file" accept="image/*" multiple>
+        <strong>Add logbook photos</strong>
+        <span>One photo per page or two-page spread, flat, in good light, in logbook order.</span>
+      </label>
+      <ol id="pages" class="pages"></ol>
+      <div class="actions">
+        <button id="read" class="primary" type="button" disabled>Read pages</button>
+        <button id="sample" type="button">Try sample pages</button>
+        <span id="read-status" class="hint" role="status"></span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="s3" id="review-card" hidden>
+      <h2 id="s3"><span class="step">3</span> Review</h2>
+      <dl class="stats" id="stats"></dl>
+      <label class="check"><input id="only-issues" type="checkbox"> Only show rows that need a look</label>
+      <div id="review"></div>
+    </section>
+
+    <section class="card" aria-labelledby="s4" id="aircraft-card" hidden>
+      <h2 id="s4"><span class="step">4</span> Aircraft</h2>
+      <p class="hint">ForeFlight wants a line per aircraft. Fill in what you know — type code (e.g. C172), gear and engine drive its currency and experience reports.</p>
+      <div class="scroll"><table class="grid" id="aircraft"></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="s5" id="export-card" hidden>
+      <h2 id="s5"><span class="step">5</span> Export</h2>
+      <div class="actions">
+        <button id="export" class="primary" type="button">Download ForeFlight CSV</button>
+        <button id="save" type="button">Save progress (JSON)</button>
+        <label class="button">Load progress<input id="load" type="file" accept="application/json,.json" hidden></label>
+        <button id="clear" type="button" class="danger">Start over</button>
+      </div>
+      <ol class="howto">
+        <li>Open ForeFlight on the web → <b>Logbook</b> → <b>Import</b>.</li>
+        <li>Upload the CSV. ForeFlight shows a preview and flags anything it can't read.</li>
+        <li>Compare ForeFlight's totals with the last "total to date" line in your paper logbook.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Ferry Flight is a transcription aid, not a logbook of record. Check every entry against your paper logbook
+    and keep the original — it's the record the FAA cares about.</footer>
+
+  <dialog id="viewer"><img alt="Logbook page photo"><button type="button" autofocus>Close</button></dialog>
+</body>
+</html>

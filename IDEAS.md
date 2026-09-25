@@ -207,6 +207,19 @@ Angle: An owner-held, tamper-evident logbook. Open question: does it need a bloc
 First slice: Signed maintenance logbook — entries signed with a key and verifiable by a buyer, no chain required.
 Tags: cars, crypto
 
+## Logbook digitizer
+
+Photograph every page of a paper pilot logbook and get back a file ForeFlight (or any
+electronic logbook) imports, instead of spending weekends retyping years of entries.
+
+Status: building
+Category: Aviation & drones
+Prior art: iOS scanner apps (TopLog, LogbookScan, FlightLogScan) read handwritten pages with AI and export CSV; ForeFlight publishes an import template; paid transcription services retype logbooks by hand.
+Angle: Web-based, nothing to install, pay-per-page instead of a subscription, and it uses the page's own "totals this page" line to catch misreads so you check a few flagged cells instead of every row.
+First slice: Ferry Flight — upload page photos, Claude reads them (bring your own API key), review flagged rows against page totals, export ForeFlight's import CSV.
+Project: ferry-flight
+Tags: aviation, logbook, ai, ocr
+
 ## Acrobatic autopilot
 
 An autopilot that flies aerobatic sequences precisely, for training, airshows, or drones.
