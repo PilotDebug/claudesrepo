@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airfoil Lab</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Airfoil Lab</h1>
+    <p>Compare NACA 4-digit sections, see how camber shifts the lift curve, and design a section for the lift you need.</p>
+  </header>
+
+  <main>
+    <section class="card compare" aria-labelledby="c-title">
+      <h2 id="c-title">Compare up to three sections</h2>
+      <div id="slots" class="slots"></div>
+      <svg id="shapes" viewBox="0 0 640 130" role="img" aria-label="Section shapes overlaid, with camber lines dashed"></svg>
+    </section>
+
+    <section class="card lift-card" aria-labelledby="l-title">
+      <div class="head">
+        <h2 id="l-title">Lift curve</h2>
+        <label class="alpha">Your angle of attack <input id="alpha" type="range" min="-4" max="16" step="1"><output id="alpha-val"></output></label>
+      </div>
+      <div class="chart-wrap">
+        <svg id="lift" viewBox="0 0 640 340" role="img" aria-label="Lift coefficient against angle of attack for each section"></svg>
+        <div id="tip" class="tip" hidden></div>
+      </div>
+      <table id="table" class="table"></table>
+      <p class="note">Thin-airfoil theory: lift rises 2π per radian (about 0.11 per degree) from each section's zero-lift angle.
+        Camber moves the line up; thickness doesn't change it in this theory. It predicts no drag and no stall;
+        real sections stall somewhere around 12–16°. It's a learning tool, not a design tool.</p>
+    </section>
+
+    <div class="side">
+      <section class="card" aria-labelledby="d-title">
+        <h2 id="d-title">Design for a target lift</h2>
+        <form id="design" class="grid2" onsubmit="return false">
+          <label>Target Cl <input name="cl" type="number" step="0.05" min="-1" max="2"></label>
+          <label>At α (°) <input name="alpha" type="number" step="0.5" min="-4" max="12"></label>
+          <label>Camber at <select name="p">
+            <option value="2">20 % chord</option><option value="3">30 % chord</option><option value="4">40 % chord</option>
+            <option value="5">50 % chord</option><option value="6">60 % chord</option></select></label>
+          <label>Thickness % <input name="t" type="number" step="1" min="6" max="24"></label>
+        </form>
+        <div id="design-out" class="design-out"></div>
+      </section>
+
+      <section class="card" aria-labelledby="r-title">
+        <h2 id="r-title">Reynolds number</h2>
+        <div class="grid2">
+          <label>Airspeed (kt) <input id="knots" type="number" min="0" step="5"></label>
+          <label>Chord (in) <input id="chord" type="number" min="0" step="1"></label>
+        </div>
+        <p class="big" id="re"></p>
+        <p class="note">Sea-level standard air (ν = 1.46 × 10⁻⁵ m²/s). Real section data is published per Reynolds
+          number: compare against polars at a similar value.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "title": "FC Voter",
+  "tagline": "Inject faults into three flight controllers and see which redundancy strategy catches them.",
+  "stage": "prototype",
+  "tags": ["drones", "redundancy", "pixhawk"],
+  "created": "2026-09-25",
+  "next": [
+    "Vote on three axes plus rates, not just roll, and add a rate-of-change cross-check",
+    "Add a hybrid mode: master/slave with a third FC as a tie-breaking monitor",
+    "Sketch the carrier-board wiring: which UART/CAN links each FC needs for the vote",
+    "Replay a real ArduPilot/PX4 log instead of the synthetic manoeuvre"
+  ]
+}

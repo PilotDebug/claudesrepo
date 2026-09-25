@@ -1,0 +1,13 @@
+{
+  "title": "Part Studio",
+  "tagline": "Design flat parts, check they can be cut, and export DXF for laser/CNC services.",
+  "stage": "prototype",
+  "tags": ["making", "cnc", "manufacturing"],
+  "created": "2026-09-25",
+  "next": [
+    "Add a 3D preview of the bracket after bending",
+    "Add slots and countersunk holes, and a custom polygon outline",
+    "Nest several parts on one sheet to estimate material use",
+    "Export an OpenSCAD file so 3D-printable versions are one step away"
+  ]
+}

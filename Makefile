@@ -5,6 +5,7 @@ help: ## Show this help
 
 test: ## Run all lab + project tests (or one: make test LAB=projects/e6b)
 	@scripts/test-all.sh $(LAB)
+	@[ -n "$(LAB)" ] || { node --test site/*.test.mjs >/dev/null && echo "site: ideas parser ok"; }
 
 new: ## Scaffold a language lab: make new LANG=python NAME=myidea
 	@scripts/new.sh $(LANG) $(NAME)

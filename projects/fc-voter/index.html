@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FC Voter</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>FC Voter</h1>
+    <p>Three flight controllers, one output. Break one and watch whether the redundancy manager notices.</p>
+  </header>
+
+  <main>
+    <section class="card controls" aria-label="Scenario">
+      <h2>Scenario</h2>
+      <div id="presets" class="chips" role="group" aria-label="Preset scenarios"></div>
+
+      <h2>Faults</h2>
+      <div id="faults" class="faults"></div>
+
+      <h2>Redundancy strategy</h2>
+      <div id="modes" class="seg" role="group" aria-label="Strategy"></div>
+      <div class="sliders">
+        <label>Disagreement threshold <output id="threshold-val"></output>
+          <input id="threshold" type="range" min="1" max="10" step="0.5"></label>
+        <label>Must persist for <output id="persist-val"></output>
+          <input id="persist" type="range" min="0.02" max="1" step="0.02"></label>
+      </div>
+    </section>
+
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <div class="head">
+        <h2 id="chart-title">Roll angle</h2>
+        <ul class="legend" aria-label="Legend">
+          <li><i class="sw out"></i>Output</li><li><i class="sw truth"></i>Actual roll</li>
+          <li><i class="sw f0"></i>FC1</li><li><i class="sw f1"></i>FC2</li><li><i class="sw f2"></i>FC3</li>
+        </ul>
+      </div>
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 760 300" role="img" aria-label="Roll from each flight controller, the voted output, and the actual roll over 30 seconds"></svg>
+        <div id="tip" class="tip" hidden></div>
+      </div>
+      <h3>Output error</h3>
+      <svg id="errors" viewBox="0 0 760 110" role="img" aria-label="Absolute output error over time against the tolerance"></svg>
+      <dl id="metrics" class="metrics"></dl>
+    </section>
+
+    <section class="card" aria-labelledby="cmp-title">
+      <h2 id="cmp-title">Same faults, both strategies</h2>
+      <table id="compare" class="table"></table>
+      <p class="note">A heartbeat only catches a controller that goes <em>silent</em>. A controller that keeps talking but is
+        wrong (bias, drift, frozen sensor) needs a vote, and a vote needs three: with two left, a disagreement can't say
+        which one is lying.</p>
+    </section>
+
+    <section class="card" aria-labelledby="log-title">
+      <h2 id="log-title">Event log</h2>
+      <ul id="log" class="log"></ul>
+    </section>
+  </main>
+  <footer>A simulation to explore redundancy logic. It isn't flight software: real systems also cross-check
+    rates, use dissimilar sensors, and are tested far beyond this.</footer>
+</body>
+</html>

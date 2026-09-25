@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseIdeas } from "./ideas.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const labsDir = path.join(root, "labs");
@@ -187,17 +188,9 @@ function buildProject(slug) {
   };
 }
 
-// IDEAS.md: each "## " heading is an idea; its paragraph is the pitch; "Tags:" groups it.
-function parseIdeas() {
+function readIdeas() {
   const file = path.join(root, "IDEAS.md");
-  if (!fs.existsSync(file)) return [];
-  return fs.readFileSync(file, "utf8").split(/^## /m).slice(1).map((chunk) => {
-    const [heading, ...rest] = chunk.split("\n");
-    const tagLine = rest.find((l) => /^tags:/i.test(l.trim()));
-    const pitch = rest.filter((l) => l !== tagLine).join("\n").trim().replace(/\s*\n\s*/g, " ");
-    const tags = tagLine ? tagLine.replace(/^\s*tags:/i, "").split(",").map((t) => t.trim()).filter(Boolean) : [];
-    return { title: heading.trim(), pitch, tags };
-  });
+  return fs.existsSync(file) ? parseIdeas(fs.readFileSync(file, "utf8")) : [];
 }
 
 const subdirs = (dir) => fs.existsSync(dir)
@@ -212,7 +205,7 @@ function main() {
   const projects = subdirs(projectsDir).map(buildProject);
   console.log("Building labs:");
   const labs = subdirs(labsDir).flatMap((lang) => subdirs(path.join(labsDir, lang)).map((n) => buildLab(lang, n)));
-  const ideas = parseIdeas();
+  const ideas = readIdeas();
 
   const manifest = {
     generatedAt: new Date().toISOString(),

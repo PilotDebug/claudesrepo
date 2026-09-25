@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Part Studio</h1>
+      <p>Design a flat part, check it can be cut, and download a DXF for a laser, waterjet, or CNC service.</p>
+    </div>
+  </header>
+
+  <main class="studio">
+    <aside class="controls" aria-label="Part settings">
+      <div class="seg" id="tabs" role="group" aria-label="Part template"></div>
+      <p id="blurb" class="muted"></p>
+
+      <section class="group">
+        <h2>Material</h2>
+        <div class="grid2">
+          <label class="wide">Material <select id="material"></select></label>
+          <label><span>Thickness <span class="unit" id="t-unit"></span></span><input id="t" type="number" min="0"></label>
+          <label>Units
+            <select id="units"><option value="mm">Millimetres</option><option value="in">Inches</option></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Shape</h2>
+        <div class="grid2" id="fields"></div>
+      </section>
+
+      <section class="group" id="items" hidden>
+        <h2>Cutouts</h2>
+        <div id="item-list"></div>
+        <div class="row">
+          <button type="button" id="add-round">+ Round hole</button>
+          <button type="button" id="add-rect">+ Rectangle</button>
+        </div>
+        <p class="muted small">Cutout sizes here are placeholders. Take real ones from each instrument's installation drawing.</p>
+      </section>
+
+      <button type="button" id="reset" class="subtle">Reset this template</button>
+    </aside>
+
+    <section class="canvas">
+      <div class="preview-wrap">
+        <svg id="preview" role="img" aria-label="Part preview"></svg>
+        <div class="legend" aria-hidden="true">
+          <span><i class="sw cut"></i>Cut</span><span><i class="sw bend"></i>Bend</span><span><i class="sw warn"></i>Needs a look</span>
+        </div>
+      </div>
+
+      <dl id="metrics" class="metrics"></dl>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Manufacturability</h2><span id="check-summary" class="pill"></span></div>
+        <ul id="checks" class="checks"></ul>
+        <p class="muted small">Rules of thumb for laser and waterjet cutting, not a guarantee. Your fab's own guidelines win.</p>
+      </div>
+
+      <div class="export">
+        <button type="button" id="dxf" class="primary">Download DXF</button>
+        <button type="button" id="svg">Download SVG</button>
+        <p class="muted small">DXF is what most online cutting services accept. The bracket's bend lines are on a separate
+          <code>BEND</code> layer, so tell your fab to bend, not cut, them.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
