@@ -1,0 +1,5 @@
+{
+  "logbookStyle": "jeppesen",
+  "firstYear": "",
+  "_help": "logbookStyle: jeppesen, asa or other. firstYear: the year of your first logbook entry, e.g. \"2004\"."
+}

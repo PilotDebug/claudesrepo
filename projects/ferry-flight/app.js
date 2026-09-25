@@ -1,5 +1,6 @@
-import { normalizeRows, sumFields, HOUR_FIELDS, COUNT_FIELDS, ALL_FIELDS } from "./normalize.js";
-import { rowIssues, pageTotalsCheck, suspectRows, LABELS } from "./checks.js";
+import { sumFields, HOUR_FIELDS, COUNT_FIELDS, ALL_FIELDS } from "./normalize.js";
+import { LABELS } from "./checks.js";
+import { analyzeLogbook } from "./logbook.js";
 import { buildForeFlightCsv, deriveAircraft, EQUIPMENT_TYPES, CLASSES, GEAR_TYPES, ENGINE_TYPES } from "./foreflight.js";
 import { MODELS, PLAN, PAGE_SCHEMA, buildPrompt, parseExtraction, estimateCost, tileRects } from "./extract.js";
 import { SAMPLE_PAGES } from "./sample.js";
@@ -258,25 +259,7 @@ $("#read").addEventListener("click", async () => {
 
 // ---------- review ----------
 function compute() {
-  let ctx = { yearHint: state.settings.year || null };
-  let prevIso = null;
-  const pages = [];
-  const rows = [];
-  for (const p of state.pages) {
-    if (!p.extraction) continue;
-    if (!ctx.y && p.extraction.yearHint) ctx.yearHint = p.extraction.yearHint;
-    const res = normalizeRows(p.extraction.rows, ctx);
-    ctx = res.context;
-    const issues = res.rows.map((r) => {
-      const list = rowIssues(r, prevIso);
-      if (r.iso) prevIso = r.iso;
-      return list;
-    });
-    const totals = pageTotalsCheck(res.rows, p.extraction.pageTotals);
-    pages.push({ page: p, rows: res.rows, issues, totals, sums: sumFields(res.rows) });
-    rows.push(...res.rows);
-  }
-  return { pages, rows };
+  return analyzeLogbook(state.pages, { year: state.settings.year });
 }
 
 function visibleColumns() {
@@ -349,7 +332,7 @@ function refresh(recompute = true) {
     if (!cp.totals.checked.length) { badge.textContent = "No page totals to check"; badge.className = "badge"; }
     else if (!mism.size) { badge.textContent = `✓ Adds up (${cp.totals.checked.length} columns)`; badge.className = "badge ok"; }
     else { badge.textContent = `${mism.size} column${mism.size > 1 ? "s" : ""} don't add up`; badge.className = "badge bad"; }
-    const suspects = suspectRows(cp.rows, cp.totals.mismatches);
+    const suspects = cp.suspects;
     const m0 = cp.totals.mismatches[0];
     const items = [
       ...(suspects.length === 1 ? [`<li class="error"><button type="button" data-go="${pi}:${suspects[0]}:${m0.field}">Row ${suspects[0] + 1}</button> is the only row with a value in every column that's off by ${fmt(Math.abs(m0.written - m0.sum))} — it's probably the misread one.</li>`] : []),
@@ -423,7 +406,7 @@ function renderAircraft() {
       if (typeof v === "boolean") return `<td class="cb"><input type="checkbox" data-f="${f}" aria-label="${label}"${v ? " checked" : ""}></td>`;
       if (opts) return `<td><select data-f="${f}" aria-label="${label}"><option value=""></option>${opts.map((o) =>
         `<option value="${o}"${o === v ? " selected" : ""}>${esc(CLASSES[o] || o)}</option>`).join("")}</select></td>`;
-      return `<td><input data-f="${f}" value="${esc(v)}" aria-label="${label}" placeholder="${f === "TypeCode" ? "C172" : ""}"></td>`;
+      return `<td><input data-f="${f}" value="${esc(v)}" aria-label="${label}"></td>`;
     }).join("")}<td class="num">${a.flights}</td></tr>`).join("")}</tbody>`;
 }
 $("#aircraft").addEventListener("input", (e) => {
@@ -464,7 +447,7 @@ $("#export").addEventListener("click", () => {
   download(`foreflight-import-${today()}.csv`, buildForeFlightCsv(aircraft, computed.rows), "text/csv");
 });
 $("#save").addEventListener("click", () => download(`ferry-flight-${today()}.json`, JSON.stringify({ app: "ferry-flight", ...state }, null, 1), "application/json"));
-$("#load").addEventListener("change", async (e) => {
+async function loadProject(e) {
   try {
     const data = JSON.parse(await e.target.files[0].text());
     if (!Array.isArray(data.pages)) throw new Error();
@@ -473,7 +456,24 @@ $("#load").addEventListener("change", async (e) => {
     save(); initSettings(); renderPages(); renderReview();
   } catch { $("#export-status").textContent = "That file isn't a Ferry Flight save."; }
   e.target.value = "";
+}
+for (const el of document.querySelectorAll(".load-file")) el.addEventListener("change", loadProject);
+
+// Review mode: attach photos to the pages read from them, matched by file name.
+$("#match-photos").addEventListener("change", (e) => {
+  let matched = 0;
+  for (const file of e.target.files) {
+    const page = state.pages.find((p) => p.name.split(/[\\/]/).pop().toLowerCase() === file.name.toLowerCase());
+    if (!page) continue;
+    images.set(page.id, { url: URL.createObjectURL(file), file });
+    matched++;
+  }
+  $("#read-status").textContent = `${matched} of ${e.target.files.length} photos matched to pages`;
+  e.target.value = "";
+  renderPages();
+  renderReview();
 });
+
 $("#clear").addEventListener("click", () => {
   if (!armed($("#clear"), "Tap again to clear everything")) return;
   state = { settings: state.settings, pages: [], aircraft: {} };

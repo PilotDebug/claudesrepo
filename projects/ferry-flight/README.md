@@ -21,6 +21,16 @@ CSV that ForeFlight's logbook import accepts.
 5. **Export**: downloads `foreflight-import-<date>.csv`. Import it in ForeFlight on the web →
    Logbook → Import. **Save progress** writes a JSON file you can load later.
 
+## Graduated: the Cowork kit
+
+Reading a real logbook needs a Claude plan, so the working version now lives in a local
+folder used with Claude in Cowork. `kit/` holds its sources: `CLAUDE.md` (Claude's
+transcription workflow), `README.md` (setup and photo tips for the pilot), and
+`ferry.config.json`. `node projects/ferry-flight/kit/build.mjs [--font handwriting.woff2]`
+assembles `scratch/ferry-flight-kit/` and `.zip`. The zip contains `tools/ferry.mjs` (the
+checker and exporter, `ferry.mjs` here), `tools/review.html` (this page bundled into one
+file in review mode) and a worked example with drawn logbook photos and a planted misread.
+
 ## Two ways to read pages
 
 - **Inside Claude (Claude plan, no API key)**: the page is also published as a Claude
@@ -67,5 +77,7 @@ CSV that ForeFlight's logbook import accepts.
 - `checks.js`: per-row sanity checks and the page-totals reconciliation.
 - `foreflight.js`: aircraft derivation, ForeFlight column mapping, CSV writer.
 - `extract.js`: prompt, JSON schema, response validation, cost estimate.
+- `logbook.js`: whole-logbook analysis shared by the page and the CLI.
+- `ferry.mjs`: the kit's command-line checker/exporter (`cli.test.js`).
 - `sample.js`: two made-up pages (one with a deliberate misread the totals check catches).
 - `ferry.test.js`: `node --test`.

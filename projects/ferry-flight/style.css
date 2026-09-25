@@ -21,6 +21,10 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+.review-only { display: none !important; }
+[data-mode="review"] .reader-only { display: none !important; }
+[data-mode="review"] p.review-only { display: block !important; }
+[data-mode="review"] label.review-only { display: inline-flex !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; }
 header, main, footer { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 body > header { padding-top: 28px; padding-bottom: 8px; }
@@ -45,7 +49,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 
 button, .button { font: inherit; font-size: 14px; font-weight: 600; padding: 9px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; }
 button:hover, .button:hover { border-color: var(--accent); }
-button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary, .button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 button:disabled { opacity: .5; cursor: default; }
 button.danger { color: var(--bad); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
