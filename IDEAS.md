@@ -718,11 +718,12 @@ Tags: business
 
 A drone or robot that reshapes itself, e.g. a morphing wing, for different phases of flight.
 
-Status: exists
+Status: building
 Category: Aviation & drones
-Prior art: NASA and FlexSys's FlexFoil morphing flaps; morphing-wing drone research.
-Angle: Pairs with the foil optimiser: pick the shape per flight phase.
+Prior art: Slats and Fowler flaps (Storch, Helio Courier, SuperSTOL); telescoping wings (MAK-10, 1931); variable sweep (F-14, F-111); NASA/FlexSys FlexFoil seamless flaps; lift+cruise and tiltrotor VTOL (V-22, Beta Alia; Lilium and Volocopter went insolvent).
+Angle: Pick the shape per flight phase: retractable slats for a Bearhawk, a wing that cruises small and lands big, or lift rotors for VTOL. Pairs with the foil optimiser.
 First slice: Shape-per-phase explorer — cruise vs climb vs landing wing settings and their trade-offs.
+Project: morph-wing
 Tags: aviation, morphing
 
 ## Foil to optimize for desired flight characteristics
