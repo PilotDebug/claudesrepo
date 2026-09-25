@@ -6,14 +6,21 @@
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #101413; --card: #181d1c; --ink: #e6ebe8; --muted: #97a19c; --line: #2c3432; --field: #121716;
     --accent: #6bb6e0; --accent-ink: #0c1a22; --warn: #e8b451; --warn-bg: #3a2c0f; --bad: #f28b82; --bad-bg: #3d1c19;
     --ok: #74c794; --ok-bg: #16301f; --paper-rule: #243a48;
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #101413; --card: #181d1c; --ink: #e6ebe8; --muted: #97a19c; --line: #2c3432; --field: #121716;
+  --accent: #6bb6e0; --accent-ink: #0c1a22; --warn: #e8b451; --warn-bg: #3a2c0f; --bad: #f28b82; --bad-bg: #3d1c19;
+  --ok: #74c794; --ok-bg: #16301f; --paper-rule: #243a48;
+  color-scheme: dark;
+}
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; }
 header, main, footer { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 body > header { padding-top: 28px; padding-bottom: 8px; }

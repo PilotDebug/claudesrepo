@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ferry Flight — paper logbook to ForeFlight</title>
+  <title>Ferry Flight</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
 </head>
@@ -28,12 +28,13 @@
         <label>Reader
           <select name="model"></select>
         </label>
-        <label class="wide">Anthropic API key
+        <label class="wide api-only">Anthropic API key
           <input name="key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
         </label>
-        <label class="check wide"><input name="remember" type="checkbox"> Remember the key on this device</label>
+        <label class="check wide api-only"><input name="remember" type="checkbox"> Remember the key on this device</label>
       </form>
-      <p class="hint">Your photos and key go straight from this browser to Anthropic's API — nothing passes through this site.
+      <p class="hint" id="plan-note" hidden>Pages are read by Claude on your own Claude plan and count toward its usage. Claude asks you to allow this the first time.</p>
+      <p class="hint api-only">Your photos and key go straight from this browser to Anthropic's API — nothing passes through this site.
         Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>, or try the sample pages without one.</p>
     </section>
 
@@ -72,6 +73,7 @@
         <button id="save" type="button">Save progress (JSON)</button>
         <label class="button">Load progress<input id="load" type="file" accept="application/json,.json" hidden></label>
         <button id="clear" type="button" class="danger">Start over</button>
+        <span id="export-status" class="hint" role="status"></span>
       </div>
       <ol class="howto">
         <li>Open ForeFlight on the web → <b>Logbook</b> → <b>Import</b>.</li>
