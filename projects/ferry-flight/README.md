@@ -7,7 +7,7 @@ CSV that ForeFlight's logbook import accepts.
 ## How to use it
 
 1. **Your logbook**: pick the logbook style, the year of the first entry (handwritten dates
-   rarely include it), and paste an Anthropic API key. **Try sample pages** works without a key.
+   rarely include it), and the reader: your Claude plan (inside Claude) or an API key. **Try sample pages** works without a key.
 2. **Pages**: add photos in logbook order, one page or two-page spread each. **Read pages**
    sends each photo to Claude and gets the rows back as structured JSON (two at a time).
 3. **Review**: every row is editable. Cells are flagged when something's off: PIC or night
@@ -20,6 +20,27 @@ CSV that ForeFlight's logbook import accepts.
    in. Nothing aircraft-specific is invented.
 5. **Export**: downloads `foreflight-import-<date>.csv`. Import it in ForeFlight on the web →
    Logbook → Import. **Save progress** writes a JSON file you can load later.
+
+## Graduated: the Cowork kit
+
+Reading a real logbook needs a Claude plan, so the working version now lives in a local
+folder used with Claude in Cowork. `kit/` holds its sources: `CLAUDE.md` (Claude's
+transcription workflow), `README.md` (setup and photo tips for the pilot), and
+`ferry.config.json`. `node projects/ferry-flight/kit/build.mjs [--font handwriting.woff2]`
+assembles `scratch/ferry-flight-kit/` and `.zip`. The zip contains `tools/ferry.mjs` (the
+checker and exporter, `ferry.mjs` here), `tools/review.html` (this page bundled into one
+file in review mode) and a worked example with drawn logbook photos and a planted misread.
+
+## Two ways to read pages
+
+- **Inside Claude (Claude plan, no API key)**: the page is also published as a Claude
+  artifact. There it reads photos with the artifact `sample` capability, which runs on the
+  viewer's own Claude plan (Pro works) and asks for permission the first time. That reader
+  shrinks every image to about 1.2 MP, so each photo goes as three images: the whole photo
+  plus two zoomed, slightly overlapping halves (`tileRects` in `extract.js`). The prompt
+  spells out the JSON shape because this path can't enforce the schema. Exports go through
+  the viewer's download prompt, since the artifact frame blocks plain download links.
+- **On the Hangar site (API key)**: as below.
 
 ## Notes and decisions
 
@@ -56,5 +77,7 @@ CSV that ForeFlight's logbook import accepts.
 - `checks.js`: per-row sanity checks and the page-totals reconciliation.
 - `foreflight.js`: aircraft derivation, ForeFlight column mapping, CSV writer.
 - `extract.js`: prompt, JSON schema, response validation, cost estimate.
+- `logbook.js`: whole-logbook analysis shared by the page and the CLI.
+- `ferry.mjs`: the kit's command-line checker/exporter (`cli.test.js`).
 - `sample.js`: two made-up pages (one with a deliberate misread the totals check catches).
 - `ferry.test.js`: `node --test`.

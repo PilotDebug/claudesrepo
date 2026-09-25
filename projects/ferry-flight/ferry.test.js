@@ -4,7 +4,7 @@ import { parseHours, parseCount, parseDateParts, normalizeRows, isDitto } from "
 import { rowIssues, pageTotalsCheck, suspectRows } from "./checks.js";
 import { SAMPLE_PAGES } from "./sample.js";
 import { buildForeFlightCsv, deriveAircraft, toFlightRow, csvCell, remarkFlags, FLIGHT_COLUMNS, AIRCRAFT_COLUMNS } from "./foreflight.js";
-import { parseExtraction, PAGE_SCHEMA, buildPrompt, estimateCost } from "./extract.js";
+import { parseExtraction, PAGE_SCHEMA, buildPrompt, estimateCost, tileRects } from "./extract.js";
 
 const blank = (over = {}) => ({
   date: "", makeModel: "", tail: "", from: "", to: "", via: "", remarks: "", instructor: "",
@@ -192,4 +192,21 @@ test("suspectRows finds the one misread row in the sample page", () => {
   assert.deepEqual(suspectRows(rows, mismatches), [0]);
   // Different deltas → no single-cell explanation.
   assert.deepEqual(suspectRows(rows, [{ field: "total", sum: 1, written: 2 }, { field: "pic", sum: 1, written: 1.5 }]), []);
+});
+
+test("tileRects splits along the long side with overlap", () => {
+  const spread = tileRects(4000, 3000);
+  assert.equal(spread.wide, true);
+  assert.deepEqual(spread.tiles, [{ x: 0, y: 0, w: 2120, h: 3000 }, { x: 1880, y: 0, w: 2120, h: 3000 }]);
+  const page = tileRects(3000, 4000);
+  assert.equal(page.wide, false);
+  assert.deepEqual(page.tiles[1], { x: 0, y: 1880, w: 3000, h: 2120 });
+});
+
+test("plan prompt spells out the JSON shape and the tiles", () => {
+  const p = buildPrompt({ tiled: true, json: true });
+  assert.match(p, /left and right/);
+  assert.match(p, /"landingsNight": ""/);
+  assert.match(p, /"pageTotals"/);
+  assert.doesNotMatch(buildPrompt(), /Reply with only one JSON/);
 });

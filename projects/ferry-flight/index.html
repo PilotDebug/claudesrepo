@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ferry Flight — paper logbook to ForeFlight</title>
+  <title>Ferry Flight</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
 </head>
@@ -25,29 +25,33 @@
           </select>
         </label>
         <label>Year of first entry <input name="year" inputmode="numeric" placeholder="e.g. 2019" maxlength="4" autocomplete="off"></label>
-        <label>Reader
+        <label class="reader-only">Reader
           <select name="model"></select>
         </label>
-        <label class="wide">Anthropic API key
+        <label class="wide api-only reader-only">Anthropic API key
           <input name="key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
         </label>
-        <label class="check wide"><input name="remember" type="checkbox"> Remember the key on this device</label>
+        <label class="check wide api-only reader-only"><input name="remember" type="checkbox"> Remember the key on this device</label>
       </form>
-      <p class="hint">Your photos and key go straight from this browser to Anthropic's API — nothing passes through this site.
+      <p class="hint" id="plan-note" hidden>Pages are read by Claude on your own Claude plan and count toward its usage. Claude asks you to allow this the first time.</p>
+      <p class="hint api-only reader-only">Your photos and key go straight from this browser to Anthropic's API — nothing passes through this site.
         Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>, or try the sample pages without one.</p>
     </section>
 
     <section class="card" aria-labelledby="s2">
       <h2 id="s2"><span class="step">2</span> Pages</h2>
-      <label class="drop" id="drop">
+      <p class="hint review-only">Your pages were read by Claude in your logbook folder. Load <b>output/ferry-flight-project.json</b>, then add the photos so you can compare each page with what was read.</p>
+      <label class="drop reader-only" id="drop">
         <input id="files" type="file" accept="image/*" multiple>
         <strong>Add logbook photos</strong>
         <span>One photo per page or two-page spread, flat, in good light, in logbook order.</span>
       </label>
       <ol id="pages" class="pages"></ol>
       <div class="actions">
-        <button id="read" class="primary" type="button" disabled>Read pages</button>
-        <button id="sample" type="button">Try sample pages</button>
+        <button id="read" class="primary reader-only" type="button" disabled>Read pages</button>
+        <label class="button primary review-only">Load project file<input class="load-file" type="file" accept="application/json,.json" hidden></label>
+        <label class="button review-only">Add photos<input id="match-photos" type="file" accept="image/*" multiple hidden></label>
+        <button id="sample" class="reader-only" type="button">Try sample pages</button>
         <span id="read-status" class="hint" role="status"></span>
       </div>
     </section>
@@ -70,8 +74,9 @@
       <div class="actions">
         <button id="export" class="primary" type="button">Download ForeFlight CSV</button>
         <button id="save" type="button">Save progress (JSON)</button>
-        <label class="button">Load progress<input id="load" type="file" accept="application/json,.json" hidden></label>
+        <label class="button">Load progress<input class="load-file" type="file" accept="application/json,.json" hidden></label>
         <button id="clear" type="button" class="danger">Start over</button>
+        <span id="export-status" class="hint" role="status"></span>
       </div>
       <ol class="howto">
         <li>Open ForeFlight on the web → <b>Logbook</b> → <b>Import</b>.</li>

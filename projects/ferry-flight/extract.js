@@ -3,9 +3,13 @@
 
 import { ALL_FIELDS, HOUR_FIELDS, COUNT_FIELDS } from "./normalize.js";
 
+// "plan" reads through the viewer's own Claude plan (only when the page runs inside Claude);
+// the others call the API with the user's key.
+export const PLAN = "plan";
 export const MODELS = {
-  "claude-opus-5": "Claude Opus 5 — most accurate",
-  "claude-sonnet-5": "Claude Sonnet 5 — cheaper",
+  [PLAN]: "Your Claude plan — no API key",
+  "claude-opus-5": "Claude Opus 5 (API key)",
+  "claude-sonnet-5": "Claude Sonnet 5 (API key, cheaper)",
 };
 
 export const LOGBOOK_STYLES = {
@@ -53,15 +57,34 @@ const FIELD_GUIDE = `Row fields (all strings, "" when the cell is empty or the c
 Hours: write decimals ("1.3"). Where hours and tenths are separate columns, combine them ("1" and "3" → "1.3").
 Copy ditto marks as "\\"" rather than guessing the value above.`;
 
-export function buildPrompt({ style = "jeppesen", yearHint = "" } = {}) {
-  return `This is a photo of a page (or two-page spread) from a pilot's paper logbook: ${LOGBOOK_STYLES[style] || LOGBOOK_STYLES.other}.
+// Split a photo into two zoomed halves along its longer side, overlapping a little so no
+// row is cut in two. Used when the reader shrinks each image (the Claude-plan path).
+export function tileRects(width, height, overlap = 0.06) {
+  const wide = width >= height;
+  const long = wide ? width : height;
+  const half = Math.round(long * (0.5 + overlap / 2));
+  const a = { x: 0, y: 0, w: wide ? half : width, h: wide ? height : half };
+  const b = wide ? { x: width - half, y: 0, w: half, h: height } : { x: 0, y: height - half, w: width, h: half };
+  return { wide, tiles: [a, b] };
+}
+
+const TILE_NOTE = (wide) => `You get three images of the same photo: image 1 is the whole photo, for counting rows and keeping each row together; images 2 and 3 are zoomed ${wide ? "left and right" : "top and bottom"} halves (they overlap slightly), for reading the handwriting. Report each row once.`;
+
+// The row/pageTotals shape spelled out, for readers that can't enforce PAGE_SCHEMA.
+const JSON_SHAPE = `Reply with only one JSON object, no other text:
+{"rows": [{${ALL_FIELDS.map((f) => `"${f}": ""`).join(", ")}, "uncertain": []}],
+ "pageTotals": {${TOTAL_FIELDS.map((f) => `"${f}": ""`).join(", ")}},
+ "yearHint": "", "notes": ""}`;
+
+export function buildPrompt({ style = "jeppesen", yearHint = "", tiled = null, json = false } = {}) {
+  return `This is a photo of a page (or two-page spread) from a pilot's paper logbook: ${LOGBOOK_STYLES[style] || LOGBOOK_STYLES.other}.${tiled == null ? "" : "\n" + TILE_NOTE(tiled)}
 Transcribe every flight entry row, top to bottom, reading across the spread so each row keeps its own values.
 ${FIELD_GUIDE}
 - uncertain: names of any fields in that row you could not read confidently.
 Skip the "totals this page", "amount forwarded" and "total to date" lines as rows. Instead put the "totals this page" values in pageTotals (same field names, "" if absent).
 yearHint: any year written on the page (header, a date cell), else "".${yearHint ? ` The owner says entries around here are from ${yearHint}.` : ""}
 notes: anything the owner should know (smudged rows, entries that span lines, endorsements rather than flights).
-Transcribe faithfully — never invent values to make columns add up.`;
+Transcribe faithfully — never invent values to make columns add up.${json ? "\n\n" + JSON_SHAPE : ""}`;
 }
 
 // Validate the model's JSON into the shape the app uses. Throws on nonsense.

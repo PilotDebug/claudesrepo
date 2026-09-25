@@ -1,7 +1,8 @@
-import { normalizeRows, sumFields, HOUR_FIELDS, COUNT_FIELDS, ALL_FIELDS } from "./normalize.js";
-import { rowIssues, pageTotalsCheck, suspectRows, LABELS } from "./checks.js";
+import { sumFields, HOUR_FIELDS, COUNT_FIELDS, ALL_FIELDS } from "./normalize.js";
+import { LABELS } from "./checks.js";
+import { analyzeLogbook } from "./logbook.js";
 import { buildForeFlightCsv, deriveAircraft, EQUIPMENT_TYPES, CLASSES, GEAR_TYPES, ENGINE_TYPES } from "./foreflight.js";
-import { MODELS, PAGE_SCHEMA, buildPrompt, parseExtraction, estimateCost } from "./extract.js";
+import { MODELS, PLAN, PAGE_SCHEMA, buildPrompt, parseExtraction, estimateCost, tileRects } from "./extract.js";
 import { SAMPLE_PAGES } from "./sample.js";
 
 const STORE = "ferry-flight:v1";
@@ -39,13 +40,38 @@ function load() {
 
 // ---------- settings ----------
 const form = $("#settings");
-form.model.innerHTML = Object.entries(MODELS).map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("");
+form.model.innerHTML = Object.entries(MODELS).map(([v, t]) => `<option value="${v}"${v === PLAN ? " hidden disabled" : ""}>${esc(t)}</option>`).join("");
 function initSettings() {
   form.style.value = state.settings.style;
   form.year.value = state.settings.year;
+  if (state.settings.model === PLAN && !plan) state.settings.model = "claude-opus-5";
   form.model.value = state.settings.model;
   form.key.value = apiKey;
   form.remember.checked = !!apiKey;
+  showReaderFields();
+}
+function showReaderFields() {
+  const usePlan = form.model.value === PLAN;
+  for (const el of document.querySelectorAll(".api-only")) el.hidden = usePlan;
+  $("#plan-note").hidden = !usePlan;
+}
+
+// Inside Claude, the page can read photos on the viewer's own Claude plan (no API key).
+let plan = null;
+let downloads = null;
+if (window.claude?.use) {
+  window.claude.use("sample").then(async (s) => {
+    const limits = s && (await s.limits().catch(() => null));
+    if (!limits?.images) return;
+    plan = { sample: s, maxImages: limits.images.maxCount };
+    // Inside Claude the page can't reach the API directly, so the plan is the only reader.
+    for (const opt of form.model.options) opt.hidden = opt.disabled = opt.value !== PLAN;
+    state.settings.model = PLAN;
+    save();
+    initSettings();
+    renderPages();
+  });
+  window.claude.use("downloads").then((d) => { downloads = d; });
 }
 form.addEventListener("input", () => {
   state.settings = { style: form.style.value, year: form.year.value.replace(/\D/g, ""), model: form.model.value };
@@ -55,6 +81,7 @@ form.addEventListener("input", () => {
     else localStorage.removeItem(KEY_STORE);
   } catch { /* ignore */ }
   save();
+  showReaderFields();
   renderPages();
   refresh();
 });
@@ -90,7 +117,8 @@ function renderPages() {
   const n = pendingPages().length;
   const btn = $("#read");
   btn.disabled = !n || reading;
-  btn.textContent = n ? `Read ${n} page${n > 1 ? "s" : ""} (≈ $${estimateCost(n, state.settings.model).toFixed(2)})` : "Read pages";
+  const cost = state.settings.model === PLAN ? "on your Claude plan" : `≈ $${estimateCost(n, state.settings.model).toFixed(2)}`;
+  btn.textContent = n ? `Read ${n} page${n > 1 ? "s" : ""} (${cost})` : "Read pages";
 }
 $("#pages").addEventListener("click", (e) => {
   const act = e.target.closest("[data-act]")?.dataset.act;
@@ -130,6 +158,42 @@ async function toJpegBase64(file) {
   return dataUrl.split(",")[1];
 }
 
+// Crop a region of the photo to a JPEG blob (the Claude-plan reader shrinks each image to
+// about 1.2 MP, so zoomed halves keep the handwriting legible).
+async function cropBlob(bmp, { x, y, w, h }, maxSide = 2000) {
+  const scale = Math.min(1, maxSide / Math.max(w, h));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  canvas.getContext("2d").drawImage(bmp, x, y, w, h, 0, 0, canvas.width, canvas.height);
+  return new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.88));
+}
+
+async function readPageWithPlan(page, yearHint) {
+  const bmp = await createImageBitmap(images.get(page.id).file);
+  const whole = { x: 0, y: 0, w: bmp.width, h: bmp.height };
+  const { wide, tiles } = tileRects(bmp.width, bmp.height);
+  const useTiles = plan.maxImages >= 3;
+  const blobs = await Promise.all([whole, ...(useTiles ? tiles : [])].map((r) => cropBlob(bmp, r)));
+  const prompt = buildPrompt({ style: state.settings.style, yearHint, tiled: useTiles ? wide : null, json: true });
+  try {
+    const data = await plan.sample.json(prompt, { images: blobs, modelTier: "complex", cache: false });
+    return parseExtraction(data);
+  } catch (e) {
+    const why = {
+      not_granted: "Allow Ferry Flight to use Claude to read pages",
+      rate_limited: "Claude usage limit reached — try the rest later",
+      invalid_json: "Claude's answer wasn't readable — try again",
+      refused: "Claude declined this image",
+      image_rejected: "Photo too large or unsupported — use a JPEG",
+      session_expired: "Sign in to Claude again",
+    }[e?.code];
+    const err = new Error(why || e?.message || "Failed");
+    err.stop = ["not_granted", "rate_limited", "session_expired", "sampling_disabled"].includes(e?.code);
+    throw err;
+  }
+}
+
 let clientPromise = null;
 function getClient() {
   clientPromise ??= import(SDK_URL).then(({ default: Anthropic }) => Anthropic);
@@ -161,7 +225,8 @@ async function readPage(page, yearHint) {
 }
 
 $("#read").addEventListener("click", async () => {
-  if (!apiKey) { $("#read-status").textContent = "Add your API key in step 1 first."; form.key.focus(); return; }
+  const usePlan = state.settings.model === PLAN && plan;
+  if (!usePlan && !apiKey) { $("#read-status").textContent = "Add your API key in step 1 first."; form.key.focus(); return; }
   const queue = pendingPages();
   reading = true;
   for (const p of queue) { p.status = "queued"; p.error = ""; }
@@ -173,11 +238,12 @@ $("#read").addEventListener("click", async () => {
       page.status = "reading";
       renderPages();
       try {
-        page.extraction = await readPage(page, state.settings.year);
+        page.extraction = await (usePlan ? readPageWithPlan : readPage)(page, state.settings.year);
         page.status = "done";
       } catch (err) {
         page.status = "error";
         page.error = err?.status === 401 ? "API key rejected" : err?.message?.slice(0, 120) || "Failed";
+        if (err?.stop) { for (const p of queue) { p.status = "error"; p.error = "Not read yet"; } queue.length = 0; $("#read-status").textContent = page.error; }
       }
       done++;
       $("#read-status").textContent = `${done} of ${done + queue.length} read`;
@@ -193,25 +259,7 @@ $("#read").addEventListener("click", async () => {
 
 // ---------- review ----------
 function compute() {
-  let ctx = { yearHint: state.settings.year || null };
-  let prevIso = null;
-  const pages = [];
-  const rows = [];
-  for (const p of state.pages) {
-    if (!p.extraction) continue;
-    if (!ctx.y && p.extraction.yearHint) ctx.yearHint = p.extraction.yearHint;
-    const res = normalizeRows(p.extraction.rows, ctx);
-    ctx = res.context;
-    const issues = res.rows.map((r) => {
-      const list = rowIssues(r, prevIso);
-      if (r.iso) prevIso = r.iso;
-      return list;
-    });
-    const totals = pageTotalsCheck(res.rows, p.extraction.pageTotals);
-    pages.push({ page: p, rows: res.rows, issues, totals, sums: sumFields(res.rows) });
-    rows.push(...res.rows);
-  }
-  return { pages, rows };
+  return analyzeLogbook(state.pages, { year: state.settings.year });
 }
 
 function visibleColumns() {
@@ -284,7 +332,7 @@ function refresh(recompute = true) {
     if (!cp.totals.checked.length) { badge.textContent = "No page totals to check"; badge.className = "badge"; }
     else if (!mism.size) { badge.textContent = `✓ Adds up (${cp.totals.checked.length} columns)`; badge.className = "badge ok"; }
     else { badge.textContent = `${mism.size} column${mism.size > 1 ? "s" : ""} don't add up`; badge.className = "badge bad"; }
-    const suspects = suspectRows(cp.rows, cp.totals.mismatches);
+    const suspects = cp.suspects;
     const m0 = cp.totals.mismatches[0];
     const items = [
       ...(suspects.length === 1 ? [`<li class="error"><button type="button" data-go="${pi}:${suspects[0]}:${m0.field}">Row ${suspects[0] + 1}</button> is the only row with a value in every column that's off by ${fmt(Math.abs(m0.written - m0.sum))} — it's probably the misread one.</li>`] : []),
@@ -329,7 +377,7 @@ $("#review").addEventListener("click", (e) => {
   }
   const act = t.dataset.act;
   if (act === "view") showPhoto(t.dataset.id);
-  if (act === "del-page" && confirm("Remove this page and its rows?")) removePage(t.dataset.id);
+  if (act === "del-page" && armed(t, "Tap again to remove")) removePage(t.dataset.id);
   if (act === "add-row" || act === "del-row") {
     const ex = computed.pages[+t.dataset.p].page.extraction;
     if (act === "add-row") ex.rows.push(Object.fromEntries([...ALL_FIELDS.map((f) => [f, ""]), ["uncertain", []]]));
@@ -358,7 +406,7 @@ function renderAircraft() {
       if (typeof v === "boolean") return `<td class="cb"><input type="checkbox" data-f="${f}" aria-label="${label}"${v ? " checked" : ""}></td>`;
       if (opts) return `<td><select data-f="${f}" aria-label="${label}"><option value=""></option>${opts.map((o) =>
         `<option value="${o}"${o === v ? " selected" : ""}>${esc(CLASSES[o] || o)}</option>`).join("")}</select></td>`;
-      return `<td><input data-f="${f}" value="${esc(v)}" aria-label="${label}" placeholder="${f === "TypeCode" ? "C172" : ""}"></td>`;
+      return `<td><input data-f="${f}" value="${esc(v)}" aria-label="${label}"></td>`;
     }).join("")}<td class="num">${a.flights}</td></tr>`).join("")}</tbody>`;
 }
 $("#aircraft").addEventListener("input", (e) => {
@@ -371,7 +419,20 @@ $("#aircraft").addEventListener("input", (e) => {
 });
 
 // ---------- export / import ----------
-function download(name, text, type) {
+// Two-tap confirmation built into the button (the Claude viewer blocks confirm()).
+function armed(btn, label) {
+  if (btn.dataset.armed) return true;
+  const original = btn.textContent;
+  btn.dataset.armed = "1";
+  btn.textContent = label;
+  setTimeout(() => { delete btn.dataset.armed; btn.textContent = original; }, 4000);
+  return false;
+}
+async function download(name, text, type) {
+  if (downloads) {
+    try { await downloads.save({ filename: name, data: new Blob([text], { type }) }); } catch { /* declined */ }
+    return;
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], { type }));
   a.download = name;
@@ -381,23 +442,40 @@ function download(name, text, type) {
 const today = () => new Date().toISOString().slice(0, 10);
 $("#export").addEventListener("click", () => {
   const errors = computed.pages.reduce((n, cp) => n + cp.issues.filter((l) => l.some((i) => i.level === "error")).length, 0);
-  if (errors && !confirm(`${errors} row${errors > 1 ? "s" : ""} still ha${errors > 1 ? "ve" : "s"} errors. Export anyway?`)) return;
+  if (errors && !armed($("#export"), `${errors} row${errors > 1 ? "s" : ""} with errors — tap again to export anyway`)) return;
   const aircraft = deriveAircraft(computed.rows, state.aircraft);
   download(`foreflight-import-${today()}.csv`, buildForeFlightCsv(aircraft, computed.rows), "text/csv");
 });
 $("#save").addEventListener("click", () => download(`ferry-flight-${today()}.json`, JSON.stringify({ app: "ferry-flight", ...state }, null, 1), "application/json"));
-$("#load").addEventListener("change", async (e) => {
+async function loadProject(e) {
   try {
     const data = JSON.parse(await e.target.files[0].text());
     if (!Array.isArray(data.pages)) throw new Error();
     state = { settings: { ...state.settings, ...data.settings }, pages: data.pages, aircraft: data.aircraft || {} };
     aircraftKey = "";
     save(); initSettings(); renderPages(); renderReview();
-  } catch { alert("That file isn't a Ferry Flight save."); }
+  } catch { $("#export-status").textContent = "That file isn't a Ferry Flight save."; }
   e.target.value = "";
+}
+for (const el of document.querySelectorAll(".load-file")) el.addEventListener("change", loadProject);
+
+// Review mode: attach photos to the pages read from them, matched by file name.
+$("#match-photos").addEventListener("change", (e) => {
+  let matched = 0;
+  for (const file of e.target.files) {
+    const page = state.pages.find((p) => p.name.split(/[\\/]/).pop().toLowerCase() === file.name.toLowerCase());
+    if (!page) continue;
+    images.set(page.id, { url: URL.createObjectURL(file), file });
+    matched++;
+  }
+  $("#read-status").textContent = `${matched} of ${e.target.files.length} photos matched to pages`;
+  e.target.value = "";
+  renderPages();
+  renderReview();
 });
+
 $("#clear").addEventListener("click", () => {
-  if (!confirm("Clear all pages and edits from this browser?")) return;
+  if (!armed($("#clear"), "Tap again to clear everything")) return;
   state = { settings: state.settings, pages: [], aircraft: {} };
   images.clear();
   aircraftKey = "";
