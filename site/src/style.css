@@ -191,6 +191,7 @@ code { font-family: var(--mono); font-size: .92em; }
 
 .igrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .icard {
+  position: relative;
   display: flex; flex-direction: column; gap: 10px; padding: 16px;
   background: var(--panel); border: 1px dashed color-mix(in srgb, var(--stage-idea) 45%, var(--border)); border-radius: var(--radius);
 }
@@ -351,3 +352,29 @@ textarea, .form input {
   .source { grid-template-columns: minmax(0, 1fr); }
   .files { position: static; flex-direction: row; flex-wrap: wrap; }
 }
+
+/* ---------- runway ---------- */
+
+.eyebrow { margin: 0 0 2px; font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.filters + .igrid, .filters + .empty { margin-top: 8px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.chip .count { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 2px; }
+.small-chip { font-size: 12px; padding: 3px 9px; }
+
+.badge.idea-raw { color: var(--stage-idea); background: color-mix(in srgb, var(--stage-idea) 13%, transparent); }
+.badge.idea-shaped { color: var(--stage-active); background: color-mix(in srgb, var(--stage-active) 13%, transparent); }
+.badge.idea-exists { color: var(--stage-shelved); background: color-mix(in srgb, var(--stage-shelved) 15%, transparent); }
+.badge.idea-building { color: var(--stage-prototype); background: color-mix(in srgb, var(--stage-prototype) 13%, transparent); }
+
+.icard.status-shaped { border-style: solid; border-color: color-mix(in srgb, var(--stage-active) 40%, var(--border)); }
+.icard.status-building { border-style: solid; border-color: color-mix(in srgb, var(--stage-prototype) 45%, var(--border)); }
+.icard.status-exists { border-style: solid; border-color: var(--border); }
+.icard .cat { font-size: 12px; color: var(--muted); }
+.icard .pitch { flex: 0 1 auto; }
+.icard .slice { flex: none; margin: 0; padding: 8px 10px; font-size: 13px; border-radius: 8px; background: var(--sunken); color: var(--text); }
+.icard .slice b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.prior { font-size: 13px; color: var(--muted); }
+.prior summary { cursor: pointer; color: var(--text); font-weight: 550; }
+.prior p { margin: 6px 0 0; }
+.icard-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }

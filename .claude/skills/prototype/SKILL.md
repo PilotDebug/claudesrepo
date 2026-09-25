@@ -13,8 +13,10 @@ question first. Otherwise make reasonable calls and note them in the README.
 
 ## 1. Set up
 
-- If the idea matches a `## ` heading in `IDEAS.md`, use that pitch and remove the entry
-  from `IDEAS.md` in the same change — it's leaving the runway.
+- If the idea matches a `## ` heading in `IDEAS.md`, build its `First slice:` (not the whole
+  idea) using the pitch as context. In the same change, set that entry's `Status: building`
+  and add `Project: <slug>`. The entry stays on the runway as the idea's record, and the
+  site links it to the project.
 - Choose a short kebab-case slug, then `make project NAME=<slug> TITLE="<Title>"`.
 - Fill in `projects/<slug>/project.json`: `tagline` (one line, shown on cards), `tags`,
   `stage: "prototype"`, and `next`: 2–4 concrete follow-ups a user could click to request.

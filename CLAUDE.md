@@ -1,12 +1,14 @@
-# Hangar — prototype sandbox
+# Pilot Debug's Hangar — personal prototype workshop
 
-The owner comes here with project ideas and builds them in conversation with Claude. Each
+This is Pilot Debug's personal sandbox and workshop: where their "million-dollar ideas" rest
+on the runway, get shaped, and come to life, built in conversation with Claude. Each
 prototype is a small static web app in `projects/`, previewed on the Hangar site (Netlify),
 tweaked through more conversations, and eventually "graduated" into its own repo and
 deployment. Speed and a working, good-looking result matter more than architecture.
 
-Likely home turf (inferred from the owner's tools; correct this if wrong): aviation,
-building a Bearhawk kit aircraft, and markets/finance. Any idea is fair game.
+Pilot Debug's ideas span aviation and drones, cars and mobility, home robotics, gaming and
+esports, making and manufacturing, markets, and civic tech. Many are years old: some already
+exist in the world, some need shaping. Be a candid, encouraging co-founder about them.
 
 ## Skills (slash commands)
 
@@ -15,6 +17,8 @@ building a Bearhawk kit aircraft, and markets/finance. Any idea is fair game.
 - `/ship` — merge PRs into `develop`, then promote `develop` → `main` (deploys the site).
 - `/graduate <slug>` — export a project to its own repo + Netlify site.
 - `/idea <idea>` — park an idea in `IDEAS.md` (the "runway").
+- `/shape <idea>` — talk a raw idea through: interpretations, prior art, the angle, the hard
+  part, and a buildable first slice. Updates its `IDEAS.md` entry.
 
 ## Layout
 
@@ -22,7 +26,12 @@ building a Bearhawk kit aircraft, and markets/finance. Any idea is fair game.
   (`prototype` → `active` → `graduated`, or `shelved`), `tags`, `created`, `links`
   (`live`, `repo`), and `next` (follow-ups shown as one-click tweak prompts). Served at
   `/p/<slug>/`. Created from `templates/project/`.
-- `IDEAS.md` — idea backlog; each `## ` heading is an idea with a pitch and `Tags:` line.
+- `IDEAS.md` — the runway. Each `## ` heading is an idea with a pitch and field lines:
+  `Status:` (`raw` / `shaped` / `exists` / `building`), `Category:`, `Prior art:`, `Angle:`,
+  `First slice:`, `Project:`, `Tags:`. The format is described at the top of the file and
+  parsed by `site/ideas.mjs` (tested by `site/ideas.test.mjs`, which also validates the real
+  file). Keep the owner's original wording in titles. When a first slice gets built, the idea
+  stays on the runway with `Status: building` and `Project: <slug>`.
 - `labs/<lang>/<name>/` — small language experiments (`python`, `node`, `go`, `rust`,
   `cpp`, `web`); `labs/<lang>/hello/` is each language's template.
 - `scripts/lab.sh <run|test> <dir>` — the **only** place that knows how to run and test

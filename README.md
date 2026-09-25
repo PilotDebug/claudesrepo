@@ -1,28 +1,39 @@
-# Hangar — a prototype sandbox
+# Pilot Debug's Hangar
 
-Where project ideas get built, in conversation with [Claude Code](https://claude.ai/code),
-into working prototypes you can preview, tweak, and eventually graduate into their own
-deployments.
+My personal workshop, where million-dollar ideas rest on the runway, get shaped, and come to
+life as working prototypes, built in conversation with [Claude Code](https://claude.ai/code),
+previewed live, and graduated into their own deployments when they're ready.
 
 **Live site:** https://celadon-meerkat-0da244.netlify.app/
 
 ## The loop
 
 ```
- IDEAS.md ──/prototype──▶ projects/<slug>/ ──PR──▶ develop ──/ship──▶ main ──▶ Netlify
- (runway)                   │    ▲                (preview)                   (live)
-                            └────┘ /tweak <slug> <change>
-                            └──────/graduate──▶ its own repo + site
+ IDEAS.md (runway)
+    │ /shape         talk it through, find the angle and a first slice
+    ▼
+ first slice
+    │ /prototype     build it, test it, check it in a browser
+    ▼
+ projects/<slug>/ ◀──┐
+    │                └─ /tweak <slug> <change>
+    ▼ PR
+ develop  (deploy preview)
+    │ /ship
+    ▼
+ main  ──▶ Netlify (live)          /graduate ──▶ its own repo + site
 ```
 
-1. **Idea** — park it with `/idea …`, or add it to `IDEAS.md`. The site's Runway page gives
-   every idea a one-click "build this" prompt.
-2. **Prototype** — `/prototype METAR decoder — paste a METAR, get plain English`. Claude
+1. **Idea** — park it with `/idea …`, or add it to `IDEAS.md`. The Runway page lists every
+   idea with its status (Raw, Shaped, Out there, Building), prior art, and a first slice.
+2. **Shape** — `/shape <idea>` talks a raw idea through with Claude: what it really is, what
+   already exists, the angle, the hard part, and the smallest thing worth building.
+3. **Prototype** — `/prototype METAR decoder — paste a METAR, get plain English`. Claude
    scaffolds `projects/<slug>/`, builds it with tests, checks it in a browser, and opens a PR.
-3. **Tweak** — open the project in Hangar, type what should change in **Tweak with Claude**,
+4. **Tweak** — open the project in Hangar, type what should change in **Tweak with Claude**,
    and paste the generated `/tweak` prompt into a session. Planned next steps are one click.
-4. **Ship** — `/ship` merges into `develop`, then `main`, and Netlify publishes.
-5. **Graduate** — `/graduate <slug>` exports it as its own repo and Netlify site.
+5. **Ship** — `/ship` merges into `develop`, then `main`, and Netlify publishes.
+6. **Graduate** — `/graduate <slug>` exports it as its own repo and Netlify site.
 
 ## What's in the hangar
 

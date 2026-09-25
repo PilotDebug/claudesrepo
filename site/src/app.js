@@ -1,4 +1,4 @@
-// Hangar: renders manifest.json (written by site/build.mjs).
+// Pilot Debug's Hangar: renders manifest.json (written by site/build.mjs).
 // Routes:
 //   #/                          projects
 //   #/p/<slug>[/tab]            one project — preview|notes|source|history|tests
@@ -19,7 +19,7 @@ const HLJS_LANG = {
 };
 const VIEWPORTS = { desktop: ["Desktop", null], tablet: ["Tablet", 820], phone: ["Phone", 390] };
 
-const state = { manifest: null, query: "", viewport: "desktop" };
+const state = { manifest: null, query: "", viewport: "desktop", runway: { status: null, category: null } };
 const $ = (id) => document.getElementById(id);
 
 // ---------- templating ----------
@@ -91,7 +91,8 @@ async function copy(text, button) {
 
 const prompts = {
   tweak: (p, change) => `/tweak ${p.slug} ${change.trim() || "<describe the change>"}`,
-  build: (idea) => `/prototype ${idea.title} — ${idea.pitch}`,
+  build: (idea) => `/prototype ${idea.title} — first slice: ${idea.firstSlice || idea.pitch}`,
+  shape: (idea) => `/shape ${idea.title}`,
   fresh: ({ name, pitch, audience, musts }) => [
     `/prototype ${name.trim() || "<name>"} — ${pitch.trim() || "<what it does>"}`,
     audience.trim() && `Who it's for: ${audience.trim()}`,
@@ -142,8 +143,9 @@ function renderHome() {
   const shown = projects
     .filter((p) => matches(p.title, p.tagline, p.tags, p.slug, p.stage))
     .sort((a, b) => (a.stage === "shelved") - (b.stage === "shelved") || (b.updated || "9").localeCompare(a.updated || "9"));
+  const ready = ideas.map((idea, i) => [idea, i]).filter(([x]) => x.status === "shaped" && x.firstSlice).slice(0, 3);
   const pipeline = [
-    ["Ideas", ideas.length, "#/runway"], ["Prototyping", count("prototype"), null],
+    ["Ideas", ideas.filter((x) => x.status !== "building").length, "#/runway"], ["Prototyping", count("prototype"), null],
     ["Active", count("active"), null], ["Graduated", count("graduated"), null],
   ];
 
@@ -151,9 +153,10 @@ function renderHome() {
     <section class="page">
       <div class="hero">
         <div>
+          <p class="eyebrow">Pilot Debug's</p>
           <h1>Hangar</h1>
-          <p>Prototypes built in conversation with Claude. Preview them live, ask for tweaks, and graduate
-             the ones that fly into their own deployments.</p>
+          <p>Where million-dollar ideas rest, get shaped, and come to life — built in conversation with
+             Claude, previewed live, and graduated when they're ready to fly on their own.</p>
         </div>
         <ol class="pipeline" aria-label="Project pipeline">
           ${pipeline.map(([label, n, href]) => h`<li>${href ? raw(`<a href="${href}">`) : ""}
@@ -164,14 +167,17 @@ function renderHome() {
       ${shown.length ? h`<div class="pgrid">${shown.map(projectCard)}</div>`
         : h`<div class="empty">${projects.length ? "No projects match your search." : "No projects yet — start one from the Runway or + New."}</div>`}
 
-      ${ideas.length ? h`
-        <div class="section-head"><h2>Next on the runway</h2><a href="#/runway">All ${ideas.length} ideas →</a></div>
-        <div class="igrid">${ideas.slice(0, 3).map((idea, i) => ideaCard(idea, i))}</div>` : ""}
+      ${ready.length ? h`
+        <div class="section-head"><div><h2>Cleared for takeoff</h2>
+          <p class="muted small">Shaped ideas with a first slice ready to build.</p></div>
+          <a href="#/runway">All ${ideas.length} ideas →</a></div>
+        <div class="igrid">${ready.map(([idea, i]) => ideaCard(idea, i))}</div>` : ""}
 
       <div class="section-head"><h2>Labs</h2><a href="#/labs">All ${labs.length} labs →</a></div>
       <p class="muted small">Small language experiments — ${Object.keys(LANGS).filter((l) => labs.some((x) => x.lang === l)).map(langName).join(", ")}.</p>
     </section>`;
   bindCopy();
+  bindIdeas(ideas);
 }
 
 // ---------- project page ----------
@@ -326,31 +332,83 @@ function renderSource(panel, files, index = 0) {
 
 // ---------- runway (ideas) ----------
 
-const ideaCard = (idea, i) => h`
-  <div class="icard">
-    <h3>${idea.title}</h3>
-    <p>${idea.pitch}</p>
-    <div class="row tags">${idea.tags.map((t) => h`<span class="tag">#${t}</span>`)}</div>
-    <button class="btn" data-idea="${i}">Copy build prompt</button>
-  </div>`;
+const IDEA_STATUS = {
+  building: ["Building", "Now a project in the Hangar"],
+  shaped: ["Shaped", "Clear enough to build a first slice"],
+  raw: ["Raw", "Needs shaping before it can be built"],
+  exists: ["Out there", "Something like it exists; the value is in the angle"],
+};
+const STATUS_ORDER = Object.keys(IDEA_STATUS);
+const ideaBadge = (s) => h`<span class="badge idea-${s}" title="${IDEA_STATUS[s][1]}">${IDEA_STATUS[s][0]}</span>`;
+
+function ideaCard(idea, i) {
+  const project = idea.project && state.manifest.projects.find((p) => p.slug === idea.project);
+  const canBuild = idea.firstSlice && idea.status !== "building";
+  return h`
+    <article class="icard status-${idea.status}">
+      <div class="row">${ideaBadge(idea.status)}<span class="cat">${idea.category}</span></div>
+      <h3>${idea.title}</h3>
+      <p class="pitch">${idea.pitch}</p>
+      ${idea.firstSlice ? h`<p class="slice"><b>First slice</b> ${idea.firstSlice}</p>` : ""}
+      ${idea.priorArt || idea.angle ? h`
+        <details class="prior">
+          <summary>${idea.status === "exists" ? "What's out there" : "Prior art"}${idea.angle ? " & the angle" : ""}</summary>
+          ${idea.priorArt ? h`<p>${idea.priorArt}</p>` : ""}
+          ${idea.angle ? h`<p><b>Angle:</b> ${idea.angle}</p>` : ""}
+        </details>` : ""}
+      <div class="icard-actions">
+        ${project ? h`<a class="btn primary" href="#/p/${project.slug}">Open project →</a>` : ""}
+        ${canBuild ? h`<button class="btn ${idea.status === "shaped" ? "primary" : ""}" data-build="${i}">Build first slice</button>` : ""}
+        ${idea.status !== "building" ? h`<button class="btn ${idea.status === "raw" ? "primary" : ""}" data-shape="${i}">Shape it</button>` : ""}
+      </div>
+    </article>`;
+}
 
 function bindIdeas(ideas) {
-  for (const b of document.querySelectorAll("[data-idea]")) {
-    b.addEventListener("click", () => copy(prompts.build(ideas[Number(b.dataset.idea)]), b));
+  for (const b of document.querySelectorAll("[data-build]")) {
+    b.addEventListener("click", () => copy(prompts.build(ideas[Number(b.dataset.build)]), b));
+  }
+  for (const b of document.querySelectorAll("[data-shape]")) {
+    b.addEventListener("click", () => copy(prompts.shape(ideas[Number(b.dataset.shape)]), b));
   }
 }
 
 function renderRunway() {
   const { ideas } = state.manifest;
-  const shown = ideas.map((idea, i) => [idea, i]).filter(([x]) => matches(x.title, x.pitch, x.tags));
+  const f = state.runway;
+  const byStatus = (s) => ideas.filter((x) => x.status === s).length;
+  const categories = [...new Set(ideas.map((x) => x.category))].sort();
+  const shown = ideas.map((idea, i) => [idea, i])
+    .filter(([x]) => (!f.status || x.status === f.status) && (!f.category || x.category === f.category))
+    .filter(([x]) => matches(x.title, x.pitch, x.tags, x.category, x.priorArt, x.firstSlice))
+    .sort(([a, ai], [b, bi]) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || ai - bi);
+
   $("view").innerHTML = h`
     <section class="page">
       <div class="section-head"><div><h1>Runway</h1>
-        <p class="muted">Ideas waiting for a prototype, from <code>IDEAS.md</code>. Copy a build prompt into Claude Code to take one off.</p></div>
+        <p class="muted">${ideas.length} ideas parked in <code>IDEAS.md</code>, waiting to come to life. <b>Shape it</b> copies a
+          prompt to talk a raw idea through with Claude; <b>Build first slice</b> copies a <code>/prototype</code> prompt.</p></div>
         <a class="btn" href="#/new">+ New idea</a></div>
+      <div class="filters" role="group" aria-label="Filter by status">
+        <button class="chip" data-status="" aria-pressed="${!f.status}">All <span class="count">${ideas.length}</span></button>
+        ${STATUS_ORDER.filter(byStatus).map((s) => h`
+          <button class="chip" data-status="${s}" aria-pressed="${f.status === s}">${IDEA_STATUS[s][0]} <span class="count">${byStatus(s)}</span></button>`)}
+      </div>
+      <div class="filters" role="group" aria-label="Filter by category">
+        <button class="chip small-chip" data-category="" aria-pressed="${!f.category}">Every category</button>
+        ${categories.map((c) => h`
+          <button class="chip small-chip" data-category="${c}" aria-pressed="${f.category === c}">${c} <span class="count">${ideas.filter((x) => x.category === c).length}</span></button>`)}
+      </div>
       ${shown.length ? h`<div class="igrid">${shown.map(([idea, i]) => ideaCard(idea, i))}</div>`
-        : h`<div class="empty">${ideas.length ? "No ideas match." : "The runway is clear. Add ideas to IDEAS.md or use /idea in Claude Code."}</div>`}
+        : h`<div class="empty">${ideas.length ? "No ideas match these filters." : "The runway is clear. Add ideas to IDEAS.md or use /idea in Claude Code."}</div>`}
     </section>`;
+
+  for (const c of document.querySelectorAll("[data-status]")) {
+    c.addEventListener("click", () => { f.status = c.dataset.status || null; renderRunway(); });
+  }
+  for (const c of document.querySelectorAll("[data-category]")) {
+    c.addEventListener("click", () => { f.category = c.dataset.category || null; renderRunway(); });
+  }
   bindIdeas(ideas);
 }
 
@@ -463,7 +521,7 @@ function route() {
 
 function render() {
   const r = route();
-  document.title = r.title ? `${r.title} · Hangar` : "Hangar";
+  document.title = r.title ? `${r.title} · Hangar` : "Pilot Debug's Hangar";
   for (const a of document.querySelectorAll("[data-nav]")) {
     a.toggleAttribute("aria-current", a.dataset.nav === r.section);
   }
